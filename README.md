@@ -8,7 +8,7 @@ deBGA has outstanding throughput on aligning reads from various prokaryote and e
 deBGA is mainly designed by Bo Liu and developed by Hongzhe Guo in Center for Bioinformatics, Harbin Institute of Technology, China.
 
 ###Memory requirement
-The memory usage of deBGA can fit the configurations of most modern servers and workstations. Its peak memory footprint depends on the length of reference genome, i.e., 25.30 Gigabytes and 5.20 Gigabytes respectively for the real H. Sapiens and E. Coli genomes, on a server with Intel E5640 CPU at 2.67 GHz, 24 Gigabytes RAM running Linux Ubuntu 14.04.
+The memory usage of deBGA can fit the configurations of most modern servers and workstations. Its peak memory footprint depends on the length of reference genome, i.e., 25.30 Gigabytes and 5.20 Gigabytes respectively for the real H. Sapiens and E. Coli genomes, on a server with Intel Xeon CPU at 2.00 GHz, 1 Terabytes RAM running Linux Ubuntu 14.04.
 
 ###Installation
 Current version of deBGA needs to be run on Linux operating system.  
@@ -78,7 +78,7 @@ We simulated a series of datasets from various genomes, i.e., human genome build
 
 
 ###Reference
-deBGA: Read Alignment with de Bruijn Graph-based Seed and Extension. Under Review.
+deBGA: Read Alignment with de Bruijn Graph-based Seed and Extension. Manuscript in preparation.
 
 ###Contact
 For advising, bug reporting and requiring help, please contact ydwang@hit.edu.cn
