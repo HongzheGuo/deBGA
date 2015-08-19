@@ -25,8 +25,8 @@ static int usage()
 	fprintf(stderr, "Version:	%s\n", COMMAND_VERSION);
 	fprintf(stderr, "Contact:	Hongzhe Guo <hzguo@hit.edu.cn>\n\n");
 	fprintf(stderr, "Usage:  	deBGA <command> [options]\n\n");
-	fprintf(stderr, "Command:	index         index sequences in the FASTA format\n");
-	fprintf(stderr, "		aln      pair-end and single-end reads seed reduction and alignment based on De bruijn graph\n");
+	fprintf(stderr, "Command:	index		index sequences in the FASTA format\n");
+	fprintf(stderr, "		aln      	pair-end and single-end reads seed reduction and alignment based on De bruijn graph\n");
 	
 	return 1;
 }

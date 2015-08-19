@@ -2178,8 +2178,10 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 		f_cigar[f_cigarn] = '\0';
 
-		sprintf(cigar_m1[tid],"%uM\0",read_length1);
-		sprintf(cigar_m2[tid],"%uM\0",read_length2);
+		//sprintf(cigar_m1[tid],"%uM\0",read_length1);
+		//sprintf(cigar_m2[tid],"%uM\0",read_length2);
+		sprintf(cigar_m1[tid],"%uM",read_length1);
+		sprintf(cigar_m2[tid],"%uM",read_length2);
 
 		//for bit operation
 		read_bit_char1 = (((uint16_t )((read_length_a1 >> 5) + 1)) << 3);
@@ -4547,6 +4549,36 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 					dm12 = dm1 + dm2;			
 					
+					//for debug tha
+					/*
+					x = mat_pos1[tid][r_i];
+					low = 0;
+					high = chr_file_n - 1;
+
+					while ( low <= high )
+					{
+						mid = (low + high) >> 1;
+						if(x < (chr_end_n[mid]))
+						{
+							high = mid - 1;
+						}
+						else if(x > (chr_end_n[mid]))
+						{
+							low = mid + 1;
+						}
+						else
+						{
+							chr_re =  mid;
+							break;
+						}
+						chr_re = low;
+					}
+
+					sam_pos1 = x - chr_end_n[chr_re - 1] + 1;
+				
+					printf("%u add: %u %s %d %d\n", chr_file_n, sam_pos1, chr_names[chr_re], dm12, dm_op[tid]);
+					*/
+					
                     if(dm12 < dm_op[tid])
                     {
 #ifdef	DM_COPY_PAIR
@@ -6608,7 +6640,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							snt += sn;
 						}
 					}	
-					sprintf(cigar_p1 + snt, "\0");
+					//sprintf(cigar_p1 + snt, "\0");
 				}
 #ifdef	NO_S_OFF	
 				s_offset1 = 0;
@@ -6848,7 +6880,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								snt += sn;
                             }
                         }
-						sprintf(cigar_p2 + snt, "\0");
+						//sprintf(cigar_p2 + snt, "\0");
                     }
 #ifdef	NO_S_OFF	
 					s_offset2 = 0;
@@ -7506,7 +7538,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							snt += sn;
 						}
 					}	
-					sprintf(cigar_p1 + snt, "\0");
+					//sprintf(cigar_p1 + snt, "\0");
 				}
 #ifdef	NO_S_OFF	
 				s_offset1 = 0;
@@ -7750,7 +7782,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								snt += sn;
                             }
                         }
-						sprintf(cigar_p2 + snt, "\0");
+						//sprintf(cigar_p2 + snt, "\0");
                     }
 #ifdef	NO_S_OFF	
 					s_offset2 = 0;
@@ -8309,7 +8341,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							snt += sn;
 						}
 					}	
-					sprintf(cigar_p1 + snt, "\0");
+					//sprintf(cigar_p1 + snt, "\0");
 				}
 #ifdef	NO_S_OFF	
 				s_offset1 = 0;
@@ -8551,7 +8583,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								snt += sn;
                             }
                         }
-						sprintf(cigar_p2 + snt, "\0");
+						//sprintf(cigar_p2 + snt, "\0");
                     }
 #ifdef	NO_S_OFF	
 					s_offset2 = 0;
@@ -10412,8 +10444,8 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
                     sn = sprintf(cigar_p1 + snt, "%dS", read_length1 - s_r_o_r - op_dm_kr1[tid][v_cnt_i]);
                     snt += sn;
                 }
-                sn = sprintf(cigar_p1 + snt, "\0");
-                snt += sn;
+                //sn = sprintf(cigar_p1 + snt, "\0");
+                //snt += sn;
 
                 if (n_cigar1)	free(cigar1);
                 if (n_cigar2)	free(cigar2);
@@ -10713,7 +10745,7 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 						snt += sn;
 					}
 				}	
-				sprintf(cigar_p1 + snt, "\0");	
+				//sprintf(cigar_p1 + snt, "\0");	
 			}
 		}
 
@@ -10964,8 +10996,8 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
                     sn = sprintf(cigar_p2 + snt, "%dS", read_length2 - s_r_o_r - op_dm_kr2[tid][v_cnt_i]);
                     snt += sn;
                 }
-                sn = sprintf(cigar_p2 + snt, "\0");
-                snt += sn;
+                //sn = sprintf(cigar_p2 + snt, "\0");
+                //snt += sn;
 
                 if (n_cigar1)	free(cigar1);
                 if (n_cigar2)	free(cigar2);
@@ -11275,7 +11307,7 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
                         snt += sn;
                     }
                 }
-                sprintf(cigar_p2 + snt, "\0");	
+                //sprintf(cigar_p2 + snt, "\0");	
 			}
 		}
 #ifdef	MAPPING_QUALITY
@@ -11676,8 +11708,8 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
                     sn = sprintf(cigar_p1 + snt, "%dS", read_length1 - s_r_o_r - op_dm_kr1[tid][v_cnt_i]);
                     snt += sn;
                 }
-                sn = sprintf(cigar_p1 + snt, "\0");
-                snt += sn;
+                //sn = sprintf(cigar_p1 + snt, "\0");
+                //snt += sn;
 
                 if (n_cigar1)	free(cigar1);
                 if (n_cigar2)	free(cigar2);
@@ -11962,7 +11994,7 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
                         snt += sn;
                     }
                 }
-                sprintf(cigar_p1 + snt, "\0");
+                //sprintf(cigar_p1 + snt, "\0");
 			}	
 		}
 
@@ -12180,8 +12212,8 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
                     sn = sprintf(cigar_p2 + snt, "%dS", read_length2 - s_r_o_r - op_dm_kr2[tid][v_cnt_i]);
                     snt += sn;
                 }
-                sn = sprintf(cigar_p2 + snt, "\0");
-                snt += sn;
+                //sn = sprintf(cigar_p2 + snt, "\0");
+                //snt += sn;
 
                 if (n_cigar1)	free(cigar1);
                 if (n_cigar2)	free(cigar2);
@@ -12467,7 +12499,7 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
                         snt += sn;
                     }
                 }
-                sprintf(cigar_p2 + snt, "\0");
+                //sprintf(cigar_p2 + snt, "\0");
 			}
 		}
 
@@ -12875,8 +12907,8 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
                     sn = sprintf(cigar_p1 + snt, "%dS", read_length1 - s_r_o_r - ops_dm_kr1[tid][v_cnt_i]);
                     snt += sn;
                 }
-                sn = sprintf(cigar_p1 + snt, "\0");
-                snt += sn;
+                //sn = sprintf(cigar_p1 + snt, "\0");
+                //snt += sn;
 
                 if (n_cigar1)	free(cigar1);
                 if (n_cigar2)	free(cigar2);
@@ -13194,7 +13226,7 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
                         snt += sn;
                     }
                 }
-                sprintf(cigar_p1 + snt, "\0");			
+                //sprintf(cigar_p1 + snt, "\0");			
 			}
 		}
 
@@ -13448,8 +13480,8 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
                     sn = sprintf(cigar_p2 + snt, "%dS", read_length2 - s_r_o_r - ops_dm_kr2[tid][v_cnt_i]);
                     snt += sn;
                 }
-                sn = sprintf(cigar_p2 + snt, "\0");
-                snt += sn;
+                //sn = sprintf(cigar_p2 + snt, "\0");
+                //snt += sn;
 
                 if (n_cigar1)	free(cigar1);
                 if (n_cigar2)	free(cigar2);
@@ -13766,7 +13798,7 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
                         snt += sn;
                     }
                 }
-                sprintf(cigar_p2 + snt, "\0");			
+                //sprintf(cigar_p2 + snt, "\0");			
 			}
 		
 		}
@@ -16128,7 +16160,8 @@ int seed_ali_core_single_end(uint32_t seqn, uint8_t tid)
 
 		f_cigar[f_cigarn] = '\0';
 	
-		sprintf(cigar_m[tid],"%uM\0",read_length);
+		//sprintf(cigar_m[tid],"%uM\0",read_length);
+		sprintf(cigar_m[tid],"%uM",read_length);
 		
 		//for bit operation
 		read_bit_char = (((uint16_t )((read_length_a >> 5) + 1)) << 3);
@@ -17207,8 +17240,8 @@ int seed_ali_core_single_end(uint32_t seqn, uint8_t tid)
 						sn = sprintf(cigar_p1 + snt, "%dS", read_length -s_r_o_r - op_dm_kr1[tid][v_cnt_i]);
 						snt += sn;
 					}
-					sn = sprintf(cigar_p1 + snt, "\0");
-					snt += sn;
+					//sn = sprintf(cigar_p1 + snt, "\0");
+					//snt += sn;
 					
 					if(n_cigar1)	free(cigar1);
 					if(n_cigar2)	free(cigar2);
@@ -17416,8 +17449,8 @@ int seed_ali_core_single_end(uint32_t seqn, uint8_t tid)
 							snt += sn;
 						}
 					}
-					sn = sprintf(cigar_p1 + snt, "\0");
-					snt += sn;
+					//sn = sprintf(cigar_p1 + snt, "\0");
+					//snt += sn;
 				}
 #ifdef	NO_S_OFF
 				s_offset1 = 0;
@@ -17716,8 +17749,8 @@ int seed_ali_core_single_end(uint32_t seqn, uint8_t tid)
 						sn = sprintf(cigar_p1 + snt, "%dS", read_length - s_r_o_r - op_dm_kr1[tid][v_cnt_i]);
 						snt += sn;
 					}
-					sn = sprintf(cigar_p1 + snt, "\0");
-					snt += sn;
+					//sn = sprintf(cigar_p1 + snt, "\0");
+					//snt += sn;
 					
 					lv_re1f = nm_score;
 					
@@ -17898,8 +17931,8 @@ int seed_ali_core_single_end(uint32_t seqn, uint8_t tid)
 							snt += sn;
 						}
 					}
-					sn = sprintf(cigar_p1 + snt, "\0");
-					snt += sn;
+					//sn = sprintf(cigar_p1 + snt, "\0");
+					//snt += sn;
 				}
 				sam_pos1 = sam_pos1 + i_n1 - d_n1;
 			}
@@ -18232,8 +18265,8 @@ int seed_ali_core_single_end(uint32_t seqn, uint8_t tid)
 						sn = sprintf(cigar_p1 + snt, "%dS", read_length - s_r_o_r - ops_dm_kr1[tid][v_cnt_i]);
 						snt += sn;
 					}
-					sn = sprintf(cigar_p1 + snt, "\0");
-					snt += sn;
+					//sn = sprintf(cigar_p1 + snt, "\0");
+					//snt += sn;
 					
 					lv_re1f = nm_score;
 					
@@ -18443,8 +18476,8 @@ int seed_ali_core_single_end(uint32_t seqn, uint8_t tid)
 							snt += sn;
 						}
 					}
-					sn = sprintf(cigar_p1 + snt, "\0");
-					snt += sn;
+					//sn = sprintf(cigar_p1 + snt, "\0");
+					//snt += sn;
 				}
 				sam_pos1 = sam_pos1 + i_n1 - d_n1; 
             }

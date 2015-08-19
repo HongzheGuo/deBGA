@@ -167,35 +167,35 @@ static int index_build_usage()
 }
 
 static int load_input_usage()
-{ 
+{
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Program:	De Brijn Graph mapping system seed reduction and alignment\n");
 	fprintf(stderr, "Version:	%s\n", PACKAGE_VERSION);
 	fprintf(stderr, "Contact:	Hongzhe Guo <guohongzhehit@gmail.com>\n\n");
-	fprintf(stderr, "Usage:  	deBGA aln [options] <index_route> <read pair-end1.fq> [read pair-end2.fq] <result_file.sam>\n\n");
-	fprintf(stderr, "Options:	-k INT	length of kmer [21-28]\n");	
-	fprintf(stderr, "		-u INT	upper limit of library insert-size [%u] (only for pair-end)\n", upper_ins);
-	fprintf(stderr, "		-f INT	floor limit of library insert-size [%u] (only for pair-end)\n", floor_ins);
-	fprintf(stderr, "		-o INT	the maximum output number  (only for pair-end)[%u]\n", cus_ali_n);
-	fprintf(stderr, "		-v NUM	the max editing distance rate for LandauVishkin [%.2f] (only for pair-end)\n", lv_rate);
-	fprintf(stderr, "		-p INT	number of threads [%u]\n", thread_n);
-	fprintf(stderr, "		-l INT	the maximum read length [%u]\n", readlen_max);
-	fprintf(stderr, "		-r INT	seed coverage length filter [%u]\n", length_reduce);
-	fprintf(stderr, "		-i INT	minimum seeds interval on read [%u]\n", seed_step);
-	fprintf(stderr, "		-s INT	number of seed circulation [%u]\n", cir_fix_n);
-	fprintf(stderr, "		-n INT	seed positions filter [%u]\n", pos_n_max);
-	fprintf(stderr, "		-x INT	the maximum output number of anchor [%u]\n", cus_max_output_ali);
-	fprintf(stderr, "		-c NUM	the max rate of alignment score [%.2f]\n", max_pair_score_r);
-	fprintf(stderr, "		-e INT	the filter number of seed positions [%u]\n", seed_filter_pos_numn);
-	//fprintf(stderr, "		--aanchor NUM	the max rate of mismatch alignment on anchor [%.2f]\n", mis_match_r_single);
-	//fprintf(stderr, "		--vanchor NUM	the max editing distance rate for LandauVishkin on anchor [%.2f]\n", lv_rate_anchor);
-	fprintf(stderr, "		--cl NUM	the max rate of alignment score on the last circle [%.2f]\n", last_circle_rate);
-	fprintf(stderr, "		--local 	use the ksw local alignment\n");
-	fprintf(stderr, "		--mg 	use the mode of multi-genomes\n");
-	fprintf(stderr, "		--local-match NUM	local alignment score match [%d]\n", mat_score);
-	fprintf(stderr, "		--local-mismatch NUM	local alignment score match [%d]\n", mis_score);
-	fprintf(stderr, "		--local-gap-open NUM	local alignment score match [%d]\n", gapo_score);
-	fprintf(stderr, "		--local-gap-extension NUM	local alignment score match [%d]\n", gape_score);
+	fprintf(stderr, "Usage:  	deBGA aln [options] <index_route> <read pair-end1.fq> [read pair-end2.fq] <result_file.sam>\n\nOptions:\n");
+	fprintf(stderr, "	-k INT	the minimum length of a valid Uni-MEM seed [21-28]\n");	
+	fprintf(stderr, "	-u INT	the upper limit of insert size (only for pair-end reads) [%u] \n", upper_ins);
+	fprintf(stderr, "	-f INT	the lower limit of insert size (only for pair-end reads) [%u] \n", floor_ins);
+	fprintf(stderr, "	-o INT	the maximum number of alignment output [%u]\n", cus_ali_n);
+	//fprintf(stderr, "	-v NUM	the max editing distance rate for LandauVishkin [%.2f] (only for pair-end)\n", lv_rate);
+	fprintf(stderr, "	-p INT	the number of threads [%u]\n", thread_n);
+	fprintf(stderr, "	-l INT	the maximum allowed read length [%u]\n", readlen_max);
+	//fprintf(stderr, "	-r INT	seed coverage length filter [%u]\n", length_reduce);
+	fprintf(stderr, "	-i INT	the minimum interval of seeding [%u]\n", seed_step);
+	fprintf(stderr, "	-s INT	the number of rounds of re-seeding [%u]\n", cir_fix_n);
+	fprintf(stderr, "	-n INT	the maximum allowed number of hits per seed [%u]\n", pos_n_max);
+	fprintf(stderr, "	-x INT	the maximum number of alignment output for anchoring alignment [%u]\n", cus_max_output_ali);
+	fprintf(stderr, "	-c NUM	the threshold of confident alignment [%.2f]\n", max_pair_score_r);
+	fprintf(stderr, "	-e INT	the budget for single-end alignment [%u]\n", seed_filter_pos_numn);
+	//fprintf(stderr, "	--aanchor NUM	the max rate of mismatch alignment on anchor [%.2f]\n", mis_match_r_single);
+	//fprintf(stderr, "	--vanchor NUM	the max editing distance rate for LandauVishkin on anchor [%.2f]\n", lv_rate_anchor);
+	fprintf(stderr, "	--cl NUM the adjusted threshold of confident alignment [%.2f]\n", last_circle_rate);
+	fprintf(stderr, "	--local  the local alignment option for confident alignment\n");
+	//fprintf(stderr, "	--mg 	use the mode of multi-genomes\n");
+	fprintf(stderr, "	--local-match NUM the score for a matched base in the local alignment [%d]\n", mat_score);
+	fprintf(stderr, "	--local-mismatch NUM the penalty for a mismatched base in the local alignment [%d]\n", mis_score);
+	fprintf(stderr, "	--local-gap-open NUM the penalty for a gap open in the local alignment [%d]\n", gapo_score);
+	fprintf(stderr, "	--local-gap-extension NUM the penalty for gap extension in the local alignment [%d]\n", gape_score);
 	fprintf(stderr, "\n");
 
 	return 1;
