@@ -196,6 +196,7 @@ static int load_input_usage()
 	fprintf(stderr, "	--local-mismatch NUM the penalty for a mismatched base in the local alignment [%d]\n", mis_score);
 	fprintf(stderr, "	--local-gap-open NUM the penalty for a gap open in the local alignment [%d]\n", gapo_score);
 	fprintf(stderr, "	--local-gap-extension NUM the penalty for gap extension in the local alignment [%d]\n", gape_score);
+	fprintf(stderr, "	For more details about the options, please see the README at https://github.com/HongzheGuo/deBGA\n");
 	fprintf(stderr, "\n");
 
 	return 1;
