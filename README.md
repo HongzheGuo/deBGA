@@ -16,7 +16,7 @@ The source code is written in C, and can be directly download from: https://gith
 The makefile is attached. Use the make command for generating the executable file.  
 
 ###Synopsis
-deBGA index [options] \<ref_route\> \<index_route\>  
+deBGA index [options] reference.fasta \<index_route\>  
 Index reference in RdBG-Index format  
 
 deBGA aln [options] \<index_route\> \<single_end_read.fastq [pair_end_read1.fastq pair_end_read2.fastq]\> \<result_file.sam\>  
