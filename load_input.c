@@ -159,7 +159,7 @@ static int index_build_usage()
 	fprintf(stderr, "Program: De Brijn Graph mapping system index building\n");
 	fprintf(stderr, "Version: %s\n", PACKAGE_VERSION);
 	fprintf(stderr, "Contact: Hongzhe Guo <hzguo@hit.edu>\n\n");
-	fprintf(stderr, "Usage:   deBGA index [options] <reference> <index_route> \n\n");
+	fprintf(stderr, "Usage:   deBGA index [options] reference.fasta <index_route> \n\n");
 	fprintf(stderr, "Options: -k INT      length of kmer [20-28]\n");
 	
 	fprintf(stderr, "\n");
