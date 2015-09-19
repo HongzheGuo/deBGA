@@ -171,7 +171,7 @@ static int load_input_usage()
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Program:	de Brijn Graph-based mapping system seed reduction and alignment\n");
 	fprintf(stderr, "Version:	%s\n", PACKAGE_VERSION);
-	fprintf(stderr, "Contact:	Hongzhe Guo <guohongzhehit@gmail.com>\n\n");
+	fprintf(stderr, "Contact:	Hongzhe Guo <hzguo@hit.edu>\n\n");
 	fprintf(stderr, "Usage:  	deBGA aln [options] <index_route> <read pair-end1.fq> [read pair-end2.fq] <result_file.sam>\n\nOptions:\n");
 	fprintf(stderr, "	-k INT	the minimum length of a valid Uni-MEM seed [21-28]\n");	
 	fprintf(stderr, "	-s INT	the number of iterations of re-seeding [%u]\n", cir_fix_n);
