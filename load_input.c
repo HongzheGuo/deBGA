@@ -156,11 +156,11 @@ int8_t mat_score = 1, mis_score = 4, gapo_score = 6, gape_score = 1;
 static int index_build_usage()
 {
 	fprintf(stderr, "\n");
-	fprintf(stderr, "Program: De Brijn Graph mapping system index building\n");
+	fprintf(stderr, "Program: de Brijn Graph-based mapping system index building\n");
 	fprintf(stderr, "Version: %s\n", PACKAGE_VERSION);
 	fprintf(stderr, "Contact: Hongzhe Guo <hzguo@hit.edu>\n\n");
 	fprintf(stderr, "Usage:   deBGA index [options] reference.fasta <index_route> \n\n");
-	fprintf(stderr, "Options: -k INT      length of kmer [20-28]\n");
+	fprintf(stderr, "Options: -k INT      the k-mer length of the vertices of RdBG [20-28]\n");
 	
 	fprintf(stderr, "\n");
 	return 1;
@@ -169,34 +169,35 @@ static int index_build_usage()
 static int load_input_usage()
 {
 	fprintf(stderr, "\n");
-	fprintf(stderr, "Program:	De Brijn Graph mapping system seed reduction and alignment\n");
+	fprintf(stderr, "Program:	de Brijn Graph-based mapping system seed reduction and alignment\n");
 	fprintf(stderr, "Version:	%s\n", PACKAGE_VERSION);
 	fprintf(stderr, "Contact:	Hongzhe Guo <guohongzhehit@gmail.com>\n\n");
 	fprintf(stderr, "Usage:  	deBGA aln [options] <index_route> <read pair-end1.fq> [read pair-end2.fq] <result_file.sam>\n\nOptions:\n");
 	fprintf(stderr, "	-k INT	the minimum length of a valid Uni-MEM seed [21-28]\n");	
-	fprintf(stderr, "	-u INT	the upper limit of insert size (only for pair-end reads) [%u] \n", upper_ins);
-	fprintf(stderr, "	-f INT	the lower limit of insert size (only for pair-end reads) [%u] \n", floor_ins);
-	fprintf(stderr, "	-o INT	the maximum number of alignment output [%u]\n", cus_ali_n);
-	//fprintf(stderr, "	-v NUM	the max editing distance rate for LandauVishkin [%.2f] (only for pair-end)\n", lv_rate);
-	fprintf(stderr, "	-p INT	the number of threads [%u]\n", thread_n);
-	fprintf(stderr, "	-l INT	the maximum allowed read length [%u]\n", readlen_max);
-	//fprintf(stderr, "	-r INT	seed coverage length filter [%u]\n", length_reduce);
+	fprintf(stderr, "	-s INT	the number of iterations of re-seeding [%u]\n", cir_fix_n);
 	fprintf(stderr, "	-i INT	the minimum interval of seeding [%u]\n", seed_step);
-	fprintf(stderr, "	-s INT	the number of rounds of re-seeding [%u]\n", cir_fix_n);
 	fprintf(stderr, "	-n INT	the maximum allowed number of hits per seed [%u]\n", pos_n_max);
-	fprintf(stderr, "	-x INT	the maximum number of alignment output for anchoring alignment [%u]\n", cus_max_output_ali);
-	fprintf(stderr, "	-c NUM	the threshold of confident alignment [%.2f]\n", max_pair_score_r);
-	fprintf(stderr, "	-e INT	the budget for single-end alignment [%u]\n", seed_filter_pos_numn);
-	//fprintf(stderr, "	--aanchor NUM	the max rate of mismatch alignment on anchor [%.2f]\n", mis_match_r_single);
-	//fprintf(stderr, "	--vanchor NUM	the max editing distance rate for LandauVishkin on anchor [%.2f]\n", lv_rate_anchor);
-	fprintf(stderr, "	--cl NUM the adjusted threshold of confident alignment [%.2f]\n", last_circle_rate);
+	fprintf(stderr, "	-c NUM	the threshold on the edit distance for early stop [%.2f]\n", max_pair_score_r);
+	fprintf(stderr, "	--cl NUM the adjusted threshold on the edit distance for early stop [%.2f]\n", last_circle_rate);
 	fprintf(stderr, "	--local  the local alignment option for confident alignment\n");
-	//fprintf(stderr, "	--mg 	use the mode of multi-genomes\n");
 	fprintf(stderr, "	--local-match NUM the score for a matched base in the local alignment [%d]\n", mat_score);
 	fprintf(stderr, "	--local-mismatch NUM the penalty for a mismatched base in the local alignment [%d]\n", mis_score);
 	fprintf(stderr, "	--local-gap-open NUM the penalty for a gap open in the local alignment [%d]\n", gapo_score);
 	fprintf(stderr, "	--local-gap-extension NUM the penalty for gap extension in the local alignment [%d]\n", gape_score);
-	fprintf(stderr, "	For more details about the options, please see the README at https://github.com/HongzheGuo/deBGA\n");
+	fprintf(stderr, "	-u INT	the upper limit of insert size (only for pair-end reads) [%u] \n", upper_ins);
+	fprintf(stderr, "	-f INT	the lower limit of insert size (only for pair-end reads) [%u] \n", floor_ins);
+	fprintf(stderr, "	-o INT	the maximum number of alignment output [%u]\n", cus_ali_n);
+	fprintf(stderr, "	-x INT	the maximum number of alignment output for anchoring alignment [%u]\n", cus_max_output_ali);
+	fprintf(stderr, "	-l INT	the maximum allowed read length [%u]\n", readlen_max);
+	fprintf(stderr, "	-e INT	the budget for single-end alignment [%u]\n", seed_filter_pos_numn);
+	fprintf(stderr, "	-p INT	the number of threads [%u]\n", thread_n);
+	//fprintf(stderr, "	--mg 	use the mode of multi-genomes\n");
+	//fprintf(stderr, "	-v NUM	the max editing distance rate for LandauVishkin [%.2f] (only for pair-end)\n", lv_rate);
+	//fprintf(stderr, "	-r INT	seed coverage length filter [%u]\n", length_reduce);
+	//fprintf(stderr, "	--aanchor NUM	the max rate of mismatch alignment on anchor [%.2f]\n", mis_match_r_single);
+	//fprintf(stderr, "	--vanchor NUM	the max editing distance rate for LandauVishkin on anchor [%.2f]\n", lv_rate_anchor);
+	
+	fprintf(stderr, "	Please refer to the following link for more detailed information about the options: https://github.com/HIT-Bioinformatics/deBGA\n");
 	fprintf(stderr, "\n");
 
 	return 1;
