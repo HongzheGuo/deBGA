@@ -154,17 +154,16 @@ bool writeCigar(char** o_buf, int* o_buflen, int count, char code)
         return false;
     }
     int written = snprintf(*o_buf, *o_buflen, "%d%c", count, code);
-    if (written > *o_buflen - 1) {
+
+	if (written > *o_buflen - 1) {
         *o_buf = '\0';
         return false;
     } else {
         *o_buf += written;
         *o_buflen -= written;
         return true;
-    }
-
+    }		
 }
-
 
 
 int computeEditDistanceWithCigar(
@@ -179,11 +178,18 @@ int computeEditDistanceWithCigar(
     const char* t = text;
     if (NULL == text) return -1;            // This happens when we're trying to read past the end of the genome.
 
-    char A[MAX_K+1][2*MAX_K+1];
+#ifdef LV_INI
+    char A[MAX_K+1][2*MAX_K+1] = {0};
+    char backtraceAction[MAX_K+1] = {0};
+    int backtraceMatched[MAX_K+1] = {0};
+    int backtraceD[MAX_K+1] = {0};
+#else
+	char A[MAX_K+1][2*MAX_K+1];
     char backtraceAction[MAX_K+1];
     int backtraceMatched[MAX_K+1];
     int backtraceD[MAX_K+1];
-    
+#endif
+	
     int end = __min(patternLen, textLen);
     const char* pend = pattern + end;
     while (p < pend) {
@@ -547,12 +553,18 @@ int computeEditDistanceWithCigar_s(
     const char* p = pattern;
     const char* t = text;
     if (NULL == text) return -1;            // This happens when we're trying to read past the end of the genome.
-
-    char A[MAX_K+1][2*MAX_K+1];
+#ifdef LV_INI
+    char A[MAX_K+1][2*MAX_K+1] = {0};
+    char backtraceAction[MAX_K+1] = {0};
+    int backtraceMatched[MAX_K+1] = {0};
+    int backtraceD[MAX_K+1] = {0};
+#else
+	char A[MAX_K+1][2*MAX_K+1];
     char backtraceAction[MAX_K+1];
     int backtraceMatched[MAX_K+1];
     int backtraceD[MAX_K+1];
-    
+#endif
+	
     int end = __min(patternLen, textLen);
     const char* pend = pattern + end;
     while (p < pend) {
@@ -704,6 +716,7 @@ done1:
 						}
 					}
 					*/
+					//printf("%s\n", cigarBuf);
 					
 					if (!writeCigar(&cigarBuf, &cigarBufLen, patternLen, 'M')) {//, format
 							return -2;
@@ -811,11 +824,17 @@ done1:
 						accumulatedMs += actionCount;
 					} else {
 						if (accumulatedMs != 0) {
+							
+							//printf("%s\n", cigarBuf);
+							
 							if (!writeCigar(&cigarBuf, &cigarBufLen, accumulatedMs, 'M')) {//, format
 								return -2;
 							}
 							accumulatedMs = 0;
 						}
+						
+						//printf("%s\n", cigarBuf);
+						
 						if (!writeCigar(&cigarBuf, &cigarBufLen, actionCount, action)) {//, format
 							return -2;
 						}
@@ -840,6 +859,9 @@ done1:
 					//
 					// Write out the trailing Ms.
 					//
+					
+					//printf("%s\n", cigarBuf);
+					
 					if (!writeCigar(&cigarBuf, &cigarBufLen, accumulatedMs, 'M')) {//, format
 						return -2;
 					}
@@ -931,11 +953,17 @@ done1:
 			accumulatedMs += actionCount;
 		} else {
 			if (accumulatedMs != 0) {
+				
+				//printf("%s\n", cigarBuf);
+				
 				if (!writeCigar(&cigarBuf, &cigarBufLen, accumulatedMs, 'M')) {//, format
 					return -2;
 				}
 				accumulatedMs = 0;
 			}
+			
+			//printf("%s\n", cigarBuf);
+			
 			if (!writeCigar(&cigarBuf, &cigarBufLen, actionCount, action)) {//, format
 					return -2;
 			}
@@ -960,6 +988,9 @@ done1:
 		//
 		// Write out the trailing Ms.
 		//
+		
+		//printf("%s\n", cigarBuf);
+		
 		if (!writeCigar(&cigarBuf, &cigarBufLen, accumulatedMs, 'M')) {//, format
 			return -2;
 		}
@@ -992,12 +1023,17 @@ int computeEditDistanceWithCigar_s_nm(
     const char* p = pattern;
     const char* t = text;
     if (NULL == text) return -1;            // This happens when we're trying to read past the end of the genome.
-
+#ifdef LV_INI
+    char A[MAX_K+1][2*MAX_K+1] = {0};
+    char backtraceAction[MAX_K+1] = {0};
+    int backtraceMatched[MAX_K+1] = {0};
+    int backtraceD[MAX_K+1] = {0};
+#else
     char A[MAX_K+1][2*MAX_K+1];
     char backtraceAction[MAX_K+1];
     int backtraceMatched[MAX_K+1];
     int backtraceD[MAX_K+1];
-    
+#endif
     int end = __min(patternLen, textLen);
     const char* pend = pattern + end;
     while (p < pend) {
@@ -1529,6 +1565,111 @@ done1:
 }
 
 
+
+
+int computeEditDistance_mis_s(
+        const char* text, int textLen, const char* pattern, int patternLen, int k, short L[MAX_K+1][2*MAX_K+1], uint8_t* quality, int16_t* s_position)
+{
+    _ASSERT(k < MAX_K);
+    k = __min(MAX_K - 1, k); // enforce limit even in non-debug builds
+    if (NULL == text) {
+        // This happens when we're trying to read past the end of the genome.
+        return -1;
+    }
+	
+	uint8_t* quality_p = quality;
+	
+    const char* p = pattern;
+    const char* t = text;
+    int endl = __min(patternLen, textLen);
+    const char* pend = pattern + endl; 
+    while (p < pend) {
+        
+        _uint64 x = *((_uint64*) p) ^ *((_uint64*) t);
+		x &= (*((_uint64*)quality_p));
+
+        if (x) {
+            unsigned long zeroes;
+            CountTrailingZeroes(x, zeroes);
+            zeroes >>= 3;
+            L[0][MAX_K] = __min((int)(p - pattern) + (int)zeroes, endl);
+            goto done1;
+        }
+        p += 8;
+        t += 8;
+		quality_p += 8;
+    }
+    L[0][MAX_K] = endl;
+done1:
+    if (L[0][MAX_K] == endl) {
+        int result = (patternLen > endl ? patternLen - endl : 0); // Could need some deletions at the end
+        return result;
+    }
+    int e, d;
+    for ( e = 1; e <= k; e++) {
+        // Search d's in the order 0, 1, -1, 2, -2, etc to find an alignment with as few indels as possible.
+        for ( d = 0; d != e+1; d = (d > 0 ? -d : -d+1)) {
+            int best = L[e-1][MAX_K+d] + 1; // up
+            int left = L[e-1][MAX_K+d-1];
+            if (left > best)
+                best = left;
+            int right = L[e-1][MAX_K+d+1] + 1;
+            if (right > best)
+                best = right;
+
+            const char* p = pattern + best;
+            const char* t = (text + d) + best;
+			quality_p = quality + best;
+			
+            if (*p == *t) { 
+                int endl = __min(patternLen, textLen - d);
+                const char* pend = pattern + endl;
+
+                while (1) {
+    
+                    _uint64 x = *((_uint64*) p) ^ *((_uint64*) t);
+					x &= (*((_uint64*)quality_p));
+					
+                    if (x) {
+                        unsigned long zeroes;
+                        CountTrailingZeroes(x, zeroes);
+                        zeroes >>= 3;
+                        best = __min((int)(p - pattern) + (int)zeroes, endl);
+                        break;
+                    }
+                    p += 8;
+					quality_p += 8;
+					
+                    if (p >= pend) {
+                        best = endl;
+                        break;
+                    }
+                    t += 8;
+                }
+            }
+
+            if (best == patternLen) {
+                return e;
+            }
+            L[e][MAX_K+d] = best;
+        }
+    }
+	
+	int max_L = 0;
+	int best_i = 0;
+	for(best_i = 1 - e; best_i < e; best_i++)
+		if(L[e - 1][MAX_K + best_i] > max_L)
+			max_L = L[e - 1][MAX_K + best_i];
+
+	
+	(*s_position) = patternLen - max_L;
+	
+	
+    return -1;
+}
+
+
+
 int computeEditDistance_misboth(
         const char* text, int textLen, const char* pattern, int patternLen, int k, short L[MAX_K+1][2*MAX_K+1], short L_mis[MAX_K+1][2*MAX_K+1], uint8_t* quality, uint16_t* mis_n)
 {
@@ -1659,16 +1800,21 @@ int computeEditDistanceWithCigar_s_mis(
     char *cigarBuf, int cigarBufLen, 
     short L[MAX_K+1][2*MAX_K+1], uint8_t* quality)//bool useM, CigarFormat format, 
 {
-    _ASSERT(k < MAX_K);
+	_ASSERT(k < MAX_K);
     const char* p = pattern;
     const char* t = text;
     if (NULL == text) return -1;            // This happens when we're trying to read past the end of the genome.
-
-    char A[MAX_K+1][2*MAX_K+1];
+#ifdef LV_INI
+    char A[MAX_K+1][2*MAX_K+1] = {0};
+    char backtraceAction[MAX_K+1] = {0};
+    int backtraceMatched[MAX_K+1] = {0};
+    int backtraceD[MAX_K+1] = {0};
+#else
+	char A[MAX_K+1][2*MAX_K+1];
     char backtraceAction[MAX_K+1];
     int backtraceMatched[MAX_K+1];
     int backtraceD[MAX_K+1];
-    
+#endif
     int end = __min(patternLen, textLen);
     const char* pend = pattern + end;
 	
@@ -1779,7 +1925,7 @@ done1:
             if (best == patternLen) {
                 // We're done. First, let's see whether we can reach e errors with no indels. Otherwise, we'll
                 // trace back through the dynamic programming array to build up the CIGAR string.
-                
+            
                 int straightMismatches = 0;
                 int i;
                 for (i = 0; i < end; i++) {
@@ -1873,6 +2019,7 @@ done1:
                 // figure out our string.
                 curD = d;
                 //int curE;
+				
                 for (curE = e; curE >= 1; curE--) {
                     backtraceAction[curE] = A[curE][MAX_K+curD];
                     if (backtraceAction[curE] == 'I') {
@@ -1993,12 +2140,13 @@ done1:
 		}
 		
 	max_L = curD;
-	
+
 	//for cigar
 
     //int curE;
     for (curE = e - 1; curE >= 1; curE--) {
         backtraceAction[curE] = A[curE][MAX_K+curD];
+
         if (backtraceAction[curE] == 'I') {
             backtraceD[curE] = curD + 1;
             backtraceMatched[curE] = L[curE][MAX_K+curD] - L[curE-1][MAX_K+curD+1] - 1;
@@ -2026,7 +2174,7 @@ done1:
 	}
 	*/
 	accumulatedMs = L[0][MAX_K+0];
-	
+
     curE = 1;
     while (curE <= e - 1) {
         // First write the action, possibly with a repeat if it occurred multiple times with no exact matches
@@ -2123,12 +2271,17 @@ int computeEditDistanceWithCigar_s_mis_left(
     const char* p = pattern;
     const char* t = text;
     if (NULL == text) return -1;            // This happens when we're trying to read past the end of the genome.
-
-    char A[MAX_K+1][2*MAX_K+1];
+#ifdef LV_INI
+    char A[MAX_K+1][2*MAX_K+1] = {0};
+    char backtraceAction[MAX_K+1] = {0};
+    int backtraceMatched[MAX_K+1] = {0};
+    int backtraceD[MAX_K+1] = {0};
+#else
+	char A[MAX_K+1][2*MAX_K+1];
     char backtraceAction[MAX_K+1];
     int backtraceMatched[MAX_K+1];
     int backtraceD[MAX_K+1];
-    
+#endif
     int end = __min(patternLen, textLen);
     const char* pend = pattern + end;
 	
@@ -2584,12 +2737,17 @@ int computeEditDistanceWithCigar_s_nm_left(
     const char* p = pattern;
     const char* t = text;
     if (NULL == text) return -1;            // This happens when we're trying to read past the end of the genome.
-
-    char A[MAX_K+1][2*MAX_K+1];
+#ifdef LV_INI
+    char A[MAX_K+1][2*MAX_K+1] = {0};
+    char backtraceAction[MAX_K+1] = {0};
+    int backtraceMatched[MAX_K+1] = {0};
+    int backtraceD[MAX_K+1];
+#else
+	char A[MAX_K+1][2*MAX_K+1];
     char backtraceAction[MAX_K+1];
     int backtraceMatched[MAX_K+1];
     int backtraceD[MAX_K+1];
-    
+#endif
     int end = __min(patternLen, textLen);
     const char* pend = pattern + end;
     while (p < pend) {
@@ -3045,12 +3203,17 @@ int computeEditDistanceWithCigar_s_left(
     const char* p = pattern;
     const char* t = text;
     if (NULL == text) return -1;            // This happens when we're trying to read past the end of the genome.
-
-    char A[MAX_K+1][2*MAX_K+1];
+#ifdef LV_INI
+    char A[MAX_K+1][2*MAX_K+1] = {0};
+    char backtraceAction[MAX_K+1] = {0};
+    int backtraceMatched[MAX_K+1] = {0};
+    int backtraceD[MAX_K+1] = {0};
+#else
+	char A[MAX_K+1][2*MAX_K+1];
     char backtraceAction[MAX_K+1];
     int backtraceMatched[MAX_K+1];
     int backtraceD[MAX_K+1];
-    
+#endif
     int end = __min(patternLen, textLen);
     const char* pend = pattern + end;
     while (p < pend) {
@@ -3492,12 +3655,17 @@ int computeEditDistanceWithCigar_s_mp(
     const char* p = pattern;
     const char* t = text;
     if (NULL == text) return -1;            // This happens when we're trying to read past the end of the genome.
-
-    char A[MAX_K+1][2*MAX_K+1];
+#ifdef LV_INI
+    char A[MAX_K+1][2*MAX_K+1] = {0};
+    char backtraceAction[MAX_K+1] = {0};
+    int backtraceMatched[MAX_K+1] = {0};
+    int backtraceD[MAX_K+1] = {0};
+#else
+	char A[MAX_K+1][2*MAX_K+1];
     char backtraceAction[MAX_K+1];
     int backtraceMatched[MAX_K+1];
     int backtraceD[MAX_K+1];
-    
+#endif
     int end = __min(patternLen, textLen);
     const char* pend = pattern + end;
     while (p < pend) {
@@ -4026,12 +4194,17 @@ int computeEditDistanceWithCigar_s_mis_mp(
     const char* p = pattern;
     const char* t = text;
     if (NULL == text) return -1;            // This happens when we're trying to read past the end of the genome.
-
-    char A[MAX_K+1][2*MAX_K+1];
+#ifdef LV_INI
+    char A[MAX_K+1][2*MAX_K+1] = {0};
+    char backtraceAction[MAX_K+1] = {0};
+    int backtraceMatched[MAX_K+1] = {0};
+    int backtraceD[MAX_K+1] = {0};
+#else
+	char A[MAX_K+1][2*MAX_K+1];
     char backtraceAction[MAX_K+1];
     int backtraceMatched[MAX_K+1];
     int backtraceD[MAX_K+1];
-    
+#endif
     int end = __min(patternLen, textLen);
     const char* pend = pattern + end;
 	
@@ -4571,12 +4744,17 @@ int computeEditDistanceWithCigar_s_mis_left_mp(
     const char* p = pattern;
     const char* t = text;
     if (NULL == text) return -1;            // This happens when we're trying to read past the end of the genome.
-
-    char A[MAX_K+1][2*MAX_K+1];
+#ifdef LV_INI
+    char A[MAX_K+1][2*MAX_K+1] = {0};
+    char backtraceAction[MAX_K+1] = {0};
+    int backtraceMatched[MAX_K+1] = {0};
+    int backtraceD[MAX_K+1] = {0};
+#else
+	char A[MAX_K+1][2*MAX_K+1];
     char backtraceAction[MAX_K+1];
     int backtraceMatched[MAX_K+1];
     int backtraceD[MAX_K+1];
-    
+#endif
     int end = __min(patternLen, textLen);
     const char* pend = pattern + end;
 	

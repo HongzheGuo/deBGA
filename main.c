@@ -15,8 +15,9 @@
 
 #define COMMAND_VERSION "0.1"
 
-//int index_build(int argc, char *argv[]);
-//int seed_ali(int argc, char *argv[]);
+int index_build(int argc, char *argv[]);
+int load_input_map(int argc, char *argv[]);
+int help_usage();
 
 static int usage()
 {
@@ -40,6 +41,7 @@ int main(int argc, char *argv[])
 	if (argc < 2) return usage();
 	if (strcmp(argv[1], "index") == 0) re = index_build(argc - 1, argv + 1);
 	else if (strcmp(argv[1], "aln") == 0) re = load_input_map(argc - 1, argv + 1);
+	else if (strcmp(argv[1], "--help") == 0) return help_usage();
 	else {
 		fprintf(stderr, "wrong command: '%s'\n", argv[1]);
 		return 1;

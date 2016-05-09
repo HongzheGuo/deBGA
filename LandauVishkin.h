@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include "bit_operation.h"
 
+//#define	LV_INI
+
 #define	LV_MP
 
 #define bool int
@@ -68,7 +70,12 @@ int computeEditDistance_mis(
         const char* text, int textLen,
         const char* pattern, int patternLen,
         int k, short L[MAX_K+1][2*MAX_K+1], uint8_t* quality);
-		
+	
+int computeEditDistance_mis_s(
+        const char* text, int textLen, 
+		const char* pattern, int patternLen, 
+		int k, short L[MAX_K+1][2*MAX_K+1], uint8_t* quality, int16_t* s_position);
+	
 int computeEditDistance_misboth(
         const char* text, int textLen,
         const char* pattern, int patternLen,
@@ -117,4 +124,10 @@ int computeEditDistanceWithCigar_s_mis_left_mp(
     int k,
     char *cigarBuf, int cigarBufLen, 
     short L[MAX_K+1][2*MAX_K+1], uint8_t* quality, uint16_t* s_offset, float* mp_subs, float* sub_t);
-	
+
+int computeEditDistanceWithCigar_s_nm_left(
+    const char* text, int textLen,
+    const char* pattern, int patternLen,
+    int k,
+    char *cigarBuf, int cigarBufLen, 
+    short L[MAX_K+1][2*MAX_K+1], int* nm_score, uint16_t* s_offset);

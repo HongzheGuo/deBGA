@@ -6,6 +6,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "load_input.h"
+
+//#define	FIX_SV
+
+//define SAMTOOLS_BUG
+//#define PICARD_BUG
+//#define POST_DEBUG
+#define	REDUCE_ANCHOR
+#define ANCHOR_LV_S
+
+#ifdef	REDUCE_ANCHOR
+uint8_t anchor_seed_length_thr = 10;//11: 1993234; 12 1992946; 15 1990***; 20 1989***; 30 1988***
+#else
+uint8_t anchor_seed_length_thr = 0;	
+#endif
+
+#define ANCHOR_LV_S_FLOAT 0.5
+//0.3 
+//0.2
+
+#define	CIGAR_LEN_ERR
+#define	READN_RANDOM_SEED
+
+#define	QUAL_20
+
+#define	R_W_LOCK
+
+#define	DEBUG_ALN_64BIT
+
+#define	MERGE_MODIFY
+#define	POUND_MODIFY
+//#define	CIGAR_S_MODIFY
+
 //#define ALL_ALL_SINGLE
 //#define	ALL_ALL
 #define	DM_COPY_PAIR
@@ -41,6 +74,13 @@
 
 //#define UNMATCH_SINGLE_END_MIS
 #define	CIR_JUMP
+
+#ifdef	R_W_LOCK
+int read_seq = 0;
+pthread_rwlock_t rwlock;
+#endif
+
+#define	MAX_REDUCE_ANCHOR_NUM	1000
 
 uint32_t cir_cnt = 0;
 uint32_t extension_cnt = 0;
@@ -263,7 +303,13 @@ uint32_t ssw_n = 0;
 typedef struct seed_MEM
 {
 	uint64_t cov[MAX_COV_A];//33
+	
+#ifdef UNPIPATH_OFF_K20
+	uint64_t uni_id;
+#else
 	uint32_t uni_id;
+#endif
+
 	uint32_t ref_pos_off;
 	uint32_t ref_pos_off_r;
 	uint32_t ref_pos_n;
@@ -320,7 +366,12 @@ typedef struct seed_PARRAY_SINGLE
 typedef struct seed_SETS
 {
 	uint64_t cov[MAX_COV_A];
+	
+#ifdef UNPIPATH_OFF_K20
+	uint64_t seed_set;
+#else
 	uint32_t seed_set;
+#endif
 
 	uint32_t ref_pos_off;
 	uint32_t ref_pos_off_r;
@@ -359,7 +410,9 @@ typedef struct SEQIOIN
 	uint16_t v_cnt;
 	uint8_t flag1;
 	uint8_t flag2;
-	uint8_t chr_re;
+	int chr_re;
+	int chr_re1;
+	int chr_re2;
 
 	int64_t pos1;
 	int64_t pos2;
@@ -371,10 +424,18 @@ typedef struct SEQIOIN
 	char* cigar1;
 	char* cigar2;
 	uint16_t xa_n;
+	uint16_t xa_n_p1;
+	uint16_t xa_n_p2;	
 	uint16_t xa_n1;
 	uint16_t xa_n2;
-
-	uint8_t* chr_res;
+	
+#ifdef	FIX_SV	
+	uint16_t xa_n_x1;
+	uint16_t xa_n_x2;
+	int* chr_res_s1;
+	int* chr_res_s2;
+#endif
+	int* chr_res;
 	char* xa_d1s;
 	uint32_t* sam_pos1s;
 	char* cigar_p1s[CUS_MAX_OUTPUT_ALI2];
@@ -405,7 +466,13 @@ char** qual2_buffer = NULL;
 char** read_rev_buffer = NULL;
 char** pr_cigar1_buffer = NULL;
 char** pr_cigar2_buffer = NULL;
-uint8_t** chr_res_buffer = NULL;
+int** chr_res_buffer = NULL;
+
+#ifdef	FIX_SV
+int** chr_res_buffer1 = NULL;
+int** chr_res_buffer2 = NULL;
+#endif
+
 char** xa_d1s_buffer = NULL;
 char** xa_d2s_buffer = NULL;
 uint32_t** sam_pos1s_buffer = NULL;
@@ -438,7 +505,7 @@ uint32_t insert_dis = 500;
 int64_t devi = 50 * 3;
 uint32_t seed_num = 0;
 uint64_t new_seed_cnt = 0;
-uint8_t uni_d = 30;//
+uint8_t uni_d = 22;//30
 uint8_t k_r = 0;
 uint8_t re_b = 0;
 uint8_t re_bt = 0;
@@ -447,6 +514,12 @@ FILE* fp_sam = NULL;
 uint32_t* random_buffer = NULL;
 uint32_t* seed_r_dup = NULL;
 
+#ifdef	READN_RANDOM_SEED	
+#define	RANDOM_RANGE_READN	1024
+uint32_t* random_buffer_readn = NULL;
+uint64_t readn_cnt = 0;
+#endif
+	
 #ifdef	PTHREAD_USE
 typedef struct{
 	uint32_t v_cnt;
@@ -464,13 +537,50 @@ seed_m** seedm = NULL;
 seed_m** seedu = NULL;
 seed_sets** seedsets = NULL;
 uint32_t** seed_set_off = NULL;
+
+#ifdef UNPIPATH_OFF_K20
+uint64_t** seed_set_pos[2][2];
+uint64_t** mat_pos1 = NULL;
+uint64_t** mat_pos2 = NULL;
+uint64_t** op_vector_pos1 = NULL;
+uint64_t** op_vector_pos2 = NULL;
+uint64_t** ops_vector_pos1 = NULL;
+uint64_t** ops_vector_pos2 = NULL;
+
+#ifdef	REDUCE_ANCHOR
+uint64_t** poses1 = NULL;
+uint64_t** poses2 = NULL;
+#endif
+					
+#else
+
 uint32_t** seed_set_pos[2][2];
-seed_pa** seedpa1[2];
-seed_pa** seedpa2[2];
+uint32_t** mat_pos1 = NULL;
+uint32_t** mat_pos2 = NULL;
 uint32_t** op_vector_pos1 = NULL;
 uint32_t** op_vector_pos2 = NULL;
 uint32_t** ops_vector_pos1 = NULL;
 uint32_t** ops_vector_pos2 = NULL;
+
+#ifdef	REDUCE_ANCHOR
+uint32_t** poses1 = NULL;
+uint32_t** poses2 = NULL;
+#endif
+
+#endif
+
+seed_pa** seedpa1[2];
+seed_pa** seedpa2[2];
+
+#ifdef	REDUCE_ANCHOR
+int** ls1 = NULL;
+int** ls2 = NULL;
+int** rs1 = NULL;
+int** rs2 = NULL;
+uint8_t** rcs1 = NULL;
+uint8_t** rcs2 = NULL;
+#endif
+
 int** op_dm_l1 = NULL;
 int** op_dm_r1 = NULL;
 int** op_dm_l2 = NULL;
@@ -489,7 +599,7 @@ uint64_t*** ops_vector_seq1 = NULL;
 uint64_t*** ops_vector_seq2 = NULL;
 
 #ifdef ALT_ALL
-uint8_t** chr_res = NULL;
+int** chr_res = NULL;
 uint32_t** sam_pos1s = NULL;
 uint32_t** sam_pos2s = NULL;
 char*** cigar_p1s = NULL;
@@ -504,18 +614,29 @@ uint8_t** op_rc = NULL;
 uint8_t** ops_rc = NULL;
 uint64_t** ref_seq_tmp1 = NULL;
 uint64_t** ref_seq_tmp2 = NULL;
-uint32_t** mat_pos1 = NULL;
-uint32_t** mat_pos2 = NULL;
+
 uint8_t** mat_rc = NULL;
 uint32_t** seed_no1 = NULL;
 uint32_t** seed_no2 = NULL;
 
 #ifdef	PAIR_RANDOM
+
+#ifdef UNPIPATH_OFF_K20
+uint64_t*** seed_k_pos = NULL;
+uint64_t** b = NULL;
+uint64_t** seedposk = NULL;	
+uint64_t** seedpos[2][2];
+uint64_t** seed_single_pos[2];
+#else
 uint32_t*** seed_k_pos = NULL;
-uint32_t** seedposk = NULL;
+uint32_t** b = NULL;
+uint32_t** seedposk = NULL;	
 uint32_t** seedpos[2][2];
-uint8_t** seed_posf[2];
 uint32_t** seed_single_pos[2];
+#endif
+
+uint8_t** seed_posf[2];
+
 int** seed_single_ld[2];
 int** seed_single_rd[2];
 int** seed_single_dm[2];
@@ -536,7 +657,7 @@ char** pr_xa_d2 = NULL;
 uint8_t** pr_lv_re2 = NULL;
 #endif
 
-uint32_t** b = NULL;
+
 uint32_t** ls = NULL;
 
 uint64_t*** read_bit_pr = NULL;
@@ -546,14 +667,22 @@ uint32_t** kcol = NULL;
 uint32_t* seed_posn[2];
 uint16_t* seedn = NULL;
 
-cnt_re* pair_op_add(uint32_t , uint32_t , int , int , int , int , int , uint8_t, int, int, uint8_t, uint32_t, uint32_t, cnt_re* );
 void seed_repetitive(uint8_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint32_t, uint32_t, cnt_re* , uint32_t, uint16_t, uint16_t, int16_t, int16_t, int16_t, int16_t, int16_t, int16_t, int16_t, int16_t);
+
+#ifdef UNPIPATH_OFF_K20
+void seed_repetitive_single64(uint64_t* , uint32_t* , uint64_t**, uint8_t, uint16_t );
+cnt_re* pair_op_add64(uint64_t , uint64_t , int , int , int , int , int , uint8_t, int, int, uint8_t, uint32_t, uint32_t, cnt_re* );
+uint64_t** seed_set_pos_single = NULL;	
+#else
 void seed_repetitive_single(uint64_t* , uint32_t* , uint32_t**, uint8_t, uint16_t );
+cnt_re* pair_op_add(uint32_t , uint32_t , int , int , int , int , int , uint8_t, int, int, uint8_t, uint32_t, uint32_t, cnt_re* );
+uint32_t** seed_set_pos_single = NULL;	
+#endif
 
 #endif
 
 //for single mapping changing
-uint32_t** seed_set_pos_single = NULL;
+
 uint32_t* set_pos_n_single = NULL;
 uint32_t* spa_i_single = NULL;
 seed_pa_single** seedpa1_single = NULL;
@@ -584,6 +713,14 @@ uint64_t* low_mask = NULL;
 uint64_t* low_mask1 = NULL;
 uint64_t* low_mask2 = NULL;
 uint32_t* max_lengtht = NULL;
+
+#ifdef	REDUCE_ANCHOR
+uint16_t** orders1 = NULL;
+uint16_t** orders2 = NULL;
+int** dms1 = NULL;
+int** dms2 = NULL;
+#endif
+
 int* dm_op = NULL;
 int* dm_ops = NULL;
 
@@ -647,21 +784,34 @@ float single_random_filter_r = 0.04;
 
 //end thread global values
 
+#ifdef	R_W_LOCK
+int seed_ali_core(int, uint8_t);
+int seed_ali_core_single_end(int, uint8_t );
+#else
 int seed_ali_core(uint32_t , uint8_t );
-void merge_pair_end(uint32_t, uint32_t, seed_pa*, seed_pa*, uint32_t*, uint32_t*, uint8_t, uint8_t );
+int seed_ali_core_single_end(uint32_t , uint8_t );
+#endif
+
 void pair_sam_output(uint8_t, uint16_t, uint16_t, uint16_t, cnt_re*, uint32_t, uint16_t, uint16_t, int16_t, int16_t, int16_t, int16_t, int16_t, int16_t, int16_t, int16_t, uint8_t);
 
-int seed_ali_core_single_end(uint32_t , uint8_t );
+
 seed_pa_single* single_seed_reduction_core_single(seed_pa_single*, uint64_t*, uint8_t*, uint32_t**, uint8_t, uint16_t, uint16_t*, uint8_t );
+
+
+#ifdef UNPIPATH_OFF_K20
+seed_pa* single_seed_reduction_core_filter64(seed_pa* , uint64_t* , uint8_t* , uint32_t* , uint64_t** , uint16_t*, uint8_t, uint16_t, uint16_t* , uint16_t* );
+void merge_pair_end64(uint32_t, uint32_t, seed_pa*, seed_pa*, uint64_t*, uint64_t*, uint8_t, uint8_t );
+
+#else
 seed_pa* single_seed_reduction_core_filter(seed_pa* , uint64_t* , uint8_t* , uint32_t* , uint32_t** , uint16_t*, uint8_t, uint16_t, uint16_t* , uint16_t* );
+void merge_pair_end(uint32_t, uint32_t, seed_pa*, seed_pa*, uint32_t*, uint32_t*, uint8_t, uint8_t );
+
+#endif
 
 #ifdef	SINGLE_END_RANDOM
 void seed_repetitive_single_end(uint64_t* , uint8_t , uint16_t );
 #endif
 
 #endif
-
-int seed_ali();
-int seed_ali_single_end();
 
 #endif /* SEED_ALI_H_ */

@@ -12,16 +12,15 @@
 
 int index_build(int argc, char *argv[])
 {
-#ifdef UNPIPATH_OFF_K20
-	printf("successfully define\n");
-#endif
-
 	if(load_input_index(argc, argv) == 1)	return 1;
 	
 	printf("kmer size to build index: %u\n", k_t);
-	
+	fflush(stdout);
     //load_reffile_kmer();
+	
+#ifdef	LAST_DEBUG	
 	load_reffile_kmer_fa();
+#endif
 
 	file_kmer_qsort();
 
@@ -39,7 +38,7 @@ void upper_string(char *string)
         string++;
     }
 }
-
+/*
 void load_reffile_kmer()
 {
     fp_n = fopen(N_route, "w");
@@ -63,7 +62,6 @@ void load_reffile_kmer()
     uint8_t line_l = 0;
     uint8_t l_p = 0;
     uint32_t line_t_c = 0;
-    uint32_t pos = 0;
     uint32_t i = 0;
 
     FILE* fpin_ref = NULL;
@@ -110,8 +108,15 @@ void load_reffile_kmer()
         fputs ("File error of creating statistical file\n",stderr);
         exit(1);
     }
-
+	
+#ifdef	UNPIPATH_OFF_K20
+	uint32_t write_buff[4];
+	uint64_t pos = 0;	
+#else
     uint32_t write_buff[3];
+	uint32_t pos = 0;
+#endif
+	
     uint8_t last_kmer_f = 0;
     chr_end_n[0] = 1;
     uint32_t chr_i = 0;
@@ -245,9 +250,15 @@ void load_reffile_kmer()
                         kmer_bit32a(kmer_s, k_t - f, kmer_i, write_buff, 3)
                         write_buff[1] |= (input << 24);
                         write_buff[1] |= (output << 16);
+#ifdef	UNPIPATH_OFF_K20
+						write_buff[3] = (pos + 1) >> 32;
+						write_buff[0] = (pos + 1) & 0Xffffffff;
+						fwrite(write_buff, 4, 4, file_p[add]);
+#else
                         write_buff[0] = pos + 1;
-
-                        fwrite(write_buff, 4, 3, file_p[add]);
+						fwrite(write_buff, 4, 3, file_p[add]);
+#endif
+                        
                         //
 
                         file_line_cnt[add]++;
@@ -314,7 +325,14 @@ void load_reffile_kmer()
                         write_buff[1] |= (output << 16);
                         write_buff[0] = pos + 1;
 
-                        fwrite(write_buff, 4, 3, file_p[add]);
+#ifdef	UNPIPATH_OFF_K20
+						write_buff[3] = (pos + 1) >> 32;
+						write_buff[0] = (pos + 1) & 0Xffffffff;
+						fwrite(write_buff, 4, 4, file_p[add]);
+#else
+                        write_buff[0] = pos + 1;
+						fwrite(write_buff, 4, 3, file_p[add]);
+#endif
                         //
 
                         file_line_cnt[add]++;
@@ -346,7 +364,7 @@ void load_reffile_kmer()
 	fwrite(ref_seq_buffer, 8, ((ref_seq_n & 0Xfff) >> 5) + 1, fp_ref_seq);
 	fclose(fp_ref_seq);
 
-	printf("number chars of ref seq: %u\n", (((ref_seq_n >> 5) + 1) << 3));
+	printf("number chars of ref seq: %"PRId64"\n", (((ref_seq_n >> 5) + 1) << 3));
 
 	FILE* fp_chr = fopen(unichr,"w");
 	if (fp_chr == NULL)
@@ -354,18 +372,26 @@ void load_reffile_kmer()
         fputs ("File error of creating chr info file\n",stderr);
         exit(1);
     }
+
+#ifdef	UNPIPATH_OFF_K20
 	for(chr_i = 1; chr_i < chr_file_n; chr_i++)
 	{
-		fprintf(fp_chr,"%s\t%u\n",chr_names[chr_i], chr_end_n[chr_i]);
+		fprintf(fp_chr,"%s\t%"PRId64"\n",chr_names[chr_i], chr_end_n[chr_i]);
 	}
-	fclose(fp_chr);
-
-
-    for(i = 0; i < file_n; i++)
+	for(i = 0; i < file_n; i++)
+        fprintf(file_sta,"%"PRId64"\n",file_line_cnt[i]);
+    fprintf(file_sta,"\n%"PRId64"",line_tol);
+    printf("total lines of ref file: %"PRId64"\n",line_tol);
+#else
+	for(chr_i = 1; chr_i < chr_file_n; chr_i++)
+		fprintf(fp_chr,"%s\t%u\n",chr_names[chr_i], chr_end_n[chr_i]);
+	for(i = 0; i < file_n; i++)
         fprintf(file_sta,"%u\n",file_line_cnt[i]);
     fprintf(file_sta,"\n%u",line_tol);
     printf("total lines of ref file: %u\n",line_tol);
-
+#endif
+	
+	fclose(fp_chr);
 
 	for(i = 0; i < file_n; i++)
     {
@@ -381,6 +407,7 @@ void load_reffile_kmer()
 
 }
 
+*/
 void load_reffile_kmer_fa()
 {
     fp_n = fopen(N_route, "w");
@@ -393,7 +420,6 @@ void load_reffile_kmer_fa()
 
 	uint8_t n_end_f = 0;
     uint8_t n_w_f = 0;
-	uint32_t pos_tr = 0;
 
     //read one line
     char one_line[REF_FASTA_LINE + 1] = "";
@@ -404,11 +430,10 @@ void load_reffile_kmer_fa()
     char output;
 
     uint8_t line_i = 0;
-    uint8_t kmer_i = 0;
+    uint32_t kmer_i = 0;
     uint8_t line_l = 0;
     uint8_t l_p = 0;
     uint32_t line_t_c = 0;
-    uint32_t pos = START_POS_REF;
     uint32_t i = 0;
 
     FILE* fpin_ref = NULL;
@@ -421,27 +446,50 @@ void load_reffile_kmer_fa()
     uint32_t file_n = 0;
     char file_d[KF_LENGTH_MAX + ROUTE_LENGTH_MAX] = "";
 
-    file_n = (1 << (f << 1));
+    file_n = ((uint32_t )1 << (f << 1));
 	//modification
 	//file_n = ((1 << (f << 1)) << 1);
+	printf("%u files to be written in folder div\n", file_n);
+	fflush(stdout);
 	
     FILE** file_p = (FILE** )malloc(file_n * sizeof(FILE* ));
+	if(file_p == NULL)
+	{
+		printf("Fail to allocate memory for file_p\n");
+		fflush(stdout);
+		exit(1);
+	}
     for(i = 0; i < file_n; i++)
         file_p[i] = NULL;
-
-    uint32_t line_tol = 0;
-    uint32_t* file_line_cnt = (uint32_t* )calloc(file_n, 4);
 
     FILE* file_sta = NULL;
     file_sta = fopen(filename_sta,"w");
     if (file_sta == NULL)
     {
         fputs ("File error of creating statistical file\n",stderr);
+		fflush(stdout);
         exit(1);
     }
 
+#ifdef	UNPIPATH_OFF_K20
+	uint32_t write_buff[4];
+	uint64_t pos = START_POS_REF;
+	uint64_t pos_tr = 0;	
+	uint64_t line_tol = 0;
+    uint64_t* file_line_cnt = (uint64_t* )calloc(file_n, 8);
+#else
     uint32_t write_buff[3];
-
+	uint32_t pos = START_POS_REF;
+	uint32_t pos_tr = 0;
+	uint32_t line_tol = 0;
+    uint32_t* file_line_cnt = (uint32_t* )calloc(file_n, 4);
+#endif
+	if(file_line_cnt == NULL)
+	{
+		printf("Fail to allocate memory for file_line_cnt\n");
+		fflush(stdout);
+		exit(1);
+	}
     //read file name under path
     uint8_t last_kmer_f = 0;
     chr_end_n[0] = 1;
@@ -462,15 +510,31 @@ void load_reffile_kmer_fa()
     l_p = 0;
 
 	uint8_t fisrt_chr = 1;
-	uint16_t chr_name_n = 0;
-	uint16_t chr_posend_n = 0;
+	uint32_t chr_name_n = 0;
+	uint32_t chr_posend_n = 0;
+	
+#ifdef	CHR_NAME_SPLIT	
+	char* pch = NULL;
+	char* saveptr = NULL;
+	char tmp_chr_name[REF_FASTA_LINE + 1];
+#endif
+
     while ((!feof(fpin_ref)) && (fgets(one_line, REF_FASTA_LINE + 2, fpin_ref) != NULL))
     {
         if(strstr(one_line,identifier) != NULL)
         {
 			one_line[strlen(one_line) - 1] = '\0';
-
+			
+#ifdef	CHR_NAME_SPLIT
+			strcpy(tmp_chr_name, one_line + 1);
+			pch = strtok_r(tmp_chr_name, " ", &saveptr);
+			
+			//printf("chr_name: %s\n", pch);
+			
+			strcpy(chr_names[chr_name_n++], pch);
+#else
 			strcpy(chr_names[chr_name_n++], one_line + 1);
+#endif
 
 			if(fisrt_chr)
 			{
@@ -522,17 +586,34 @@ void load_reffile_kmer_fa()
                     }
 
                     seq_exact(kmer, kmer_s, kmer_i, f, strlen(kmer));
-
+					
+#ifdef	DEBUG_INPUT	
+					if(strcmp(kmer_s, "AAAAAACTTGAAAGATAA") == 0)
+						printf("\n\n1. %s:\nline: %s\n%s\n\n\n", tmp_chr_name, one_line, kmer);
+					//printf("%s\n", kmer);
+#endif					
                     //binary file
                     //must assign in this order
                     kmer_bit32a(kmer_s, k_t - f, kmer_i, write_buff, 3)
                     write_buff[1] |= (input << 24);
                     write_buff[1] |= (output << 16);
+
+#ifdef	UNPIPATH_OFF_K20
+					write_buff[3] = (pos + 1) >> 32;
+					write_buff[0] = (pos + 1) & 0Xffffffff;
+					fwrite(write_buff, 4, 4, file_p[add]);
+#else
                     write_buff[0] = pos + 1;
+					fwrite(write_buff, 4, 3, file_p[add]);
+					//fwrite(write_buff, sizeof(write_buff ), 1, file_p[add]);
+#endif
 
-                    fwrite(write_buff, 4, 3, file_p[add]);
+#ifdef	DEBUG_INPUT
+					if(write_buff[2] == 8258096)
+						printf("\n\n2. %s:\nline: %s\n%s\n%u\n\n\n", tmp_chr_name, one_line, kmer, (uint16_t )write_buff[1]);
+#endif
+					
                     //
-
                     file_line_cnt[add]++;
                     line_tol++;
                 }
@@ -550,7 +631,8 @@ void load_reffile_kmer_fa()
             chr_end_n[chr_posend_n++] = pos + 1;
 
 			printf("Has finished loading %s\n", chr_names[chr_name_n - 2]);
-
+			fflush(stdout);
+			
 			l_p = 0;
         }
         else
@@ -645,7 +727,6 @@ void load_reffile_kmer_fa()
 
                 if(file_p[add] == NULL)
                 {
-
                     file_p[add] = fopen(file_d, "wb");
                     if (file_p[add] == NULL)
                     {
@@ -656,14 +737,31 @@ void load_reffile_kmer_fa()
 
                 seq_exact(kmer, kmer_s, kmer_i, f, strlen(kmer));
 
+#ifdef	DEBUG_INPUT	
+				if(strcmp(kmer_s, "AAAAAACTTGAAAGATAA") == 0)
+					printf("\n\n1. %s:\nline: %s\n%s\n\n\n", tmp_chr_name, one_line, kmer);
+				//printf("%s\n", kmer);
+#endif
                 //binary file
                 //must assign in this order
                 kmer_bit32a(kmer_s, k_t - f, kmer_i, write_buff, 3)
                 write_buff[1] |= (input << 24);
                 write_buff[1] |= (output << 16);
-                write_buff[0] = pos + 1;
 
-                fwrite(write_buff, 4, 3, file_p[add]);
+#ifdef	UNPIPATH_OFF_K20
+				write_buff[3] = (pos + 1) >> 32;
+				write_buff[0] = (pos + 1) & 0Xffffffff;
+				fwrite(write_buff, 4, 4, file_p[add]);
+#else
+                write_buff[0] = pos + 1;
+				fwrite(write_buff, 4, 3, file_p[add]);
+				//fwrite(write_buff, sizeof(write_buff ), 1, file_p[add]);
+#endif
+ 
+#ifdef	DEBUG_INPUT
+				if(write_buff[2] == 8258096)
+					printf("\n\n%2. s:\nline: %s\n%s\n%u\n\n\n", tmp_chr_name, one_line, kmer, write_buff[1]);
+#endif
                 //
 
                 file_line_cnt[add]++;
@@ -723,15 +821,33 @@ void load_reffile_kmer_fa()
             }
 
             seq_exact(kmer, kmer_s, kmer_i, f, strlen(kmer));
+			
+#ifdef	DEBUG_INPUT	
+			if(strcmp(kmer_s, "AAAAAACTTGAAAGATAA") == 0)
+				printf("\n\n1. %s:\nline: %s\n%s\n\n\n", tmp_chr_name, one_line, kmer);
+			//printf("%s\n", kmer);
+#endif
 
             //binary file
             //must assign in this order
             kmer_bit32a(kmer_s, k_t - f, kmer_i, write_buff, 3)
             write_buff[1] |= (input << 24);
             write_buff[1] |= (output << 16);
+			
+#ifdef	UNPIPATH_OFF_K20
+			write_buff[3] = (pos + 1) >> 32;
+			write_buff[0] = (pos + 1) & 0Xffffffff;
+			fwrite(write_buff, 4, 4, file_p[add]);
+#else
             write_buff[0] = pos + 1;
+			fwrite(write_buff, 4, 3, file_p[add]);
+			//fwrite(write_buff, sizeof(write_buff ), 1, file_p[add]);
+#endif
 
-            fwrite(write_buff, 4, 3, file_p[add]);
+#ifdef	DEBUG_INPUT
+			if(write_buff[2] == 8258096)
+				printf("\n\n2. %s:\nline: %s\n%s\n%u\n\n\n", tmp_chr_name, one_line, kmer, write_buff[1]);
+#endif
             //
 
             file_line_cnt[add]++;
@@ -743,18 +859,22 @@ void load_reffile_kmer_fa()
     chr_end_n[chr_posend_n++] = pos + 1;
 	
 	printf("Has finished loading %s\n", chr_names[chr_name_n - 1]);
-	
+#ifdef	UNPIPATH_OFF_K20
+	printf("total number of lines: %"PRId64"\n",line_tol);
+	printf("total number of positions on ref seq: %"PRId64"\n", pos+1);
+#else
 	printf("total number of lines: %u\n",line_tol);
-	
 	printf("total number of positions on ref seq: %u\n", pos+1);
-	
+#endif
 	fclose(fpin_ref);
 
 	fwrite(ref_seq_buffer, 8, ((ref_seq_n & 0Xfff) >> 5) + 1, fp_ref_seq);
 	fclose(fp_ref_seq);
 
-	printf("total number of chars to allocate for ref seq: %u\n", (((ref_seq_n >> 5) + 1) << 3));
+	printf("total number of chars to allocate for ref seq: %"PRId64"\n", (((ref_seq_n >> 5) + 1) << 3));
 
+	fflush(stdout);
+	
 	FILE* fp_chr = fopen(unichr,"w");
 	if (fp_chr == NULL)
     {
@@ -762,6 +882,18 @@ void load_reffile_kmer_fa()
         exit(1);
     }
 
+#ifdef	UNPIPATH_OFF_K20
+	for(chr_i = 0; chr_i < chr_posend_n; chr_i++)
+	{
+		fprintf(fp_chr,"%s\n%"PRId64"\n",chr_names[chr_i], chr_end_n[chr_i]);
+	}
+	fclose(fp_chr);
+
+    for(i = 0; i < file_n; i++)
+        fprintf(file_sta,"%"PRId64"\n",file_line_cnt[i]);
+    fprintf(file_sta,"\n%"PRId64"",line_tol);
+	fflush(file_sta);
+#else
 	for(chr_i = 0; chr_i < chr_posend_n; chr_i++)
 	{
 		fprintf(fp_chr,"%s\n%u\n",chr_names[chr_i], chr_end_n[chr_i]);
@@ -771,7 +903,8 @@ void load_reffile_kmer_fa()
     for(i = 0; i < file_n; i++)
         fprintf(file_sta,"%u\n",file_line_cnt[i]);
     fprintf(file_sta,"\n%u",line_tol);
-
+	fflush(file_sta);
+#endif
 
 	for(i = 0; i < file_n; i++)
     {
@@ -792,8 +925,8 @@ void load_reffile_kmer_fa()
 
 int compare (const void * a, const void * b)
 {
-    k_p* kp1 = (k_p *)a;
-    k_p* kp2 = (k_p *)b;
+    k_p* kp1 = (k_p* )a;
+    k_p* kp2 = (k_p* )b;
 
     uint16_t kmerf1 = (uint16_t )((kp1->kp)[1]);
     uint16_t kmerf2 = (uint16_t )((kp2->kp)[1]);
@@ -812,15 +945,54 @@ int compare (const void * a, const void * b)
             return -1;
         else
         {
-            if ((kp1->kp)[0] > (kp2->kp)[0])
+#ifdef	UNPIPATH_OFF_K20	
+			/*
+			uint64_t tmp_kp_pos1 = (kp1->kp)[3];
+			uint64_t tmp_kp_pos2 = (kp2->kp)[3];
+			tmp_kp_pos1 = ((tmp_kp_pos1 << 32) | ((kp1->kp)[0]));
+			tmp_kp_pos2 = ((tmp_kp_pos2 << 32) | ((kp2->kp)[0]));
+
+            if (tmp_kp_pos1 > tmp_kp_pos2)
+                return 1;
+            else if (tmp_kp_pos1 < tmp_kp_pos2)
+                return -1;
+            else
+            {
+                printf("same pos\n");
+				exit(2);
+                return 0;
+            }
+			*/
+			
+			if ((kp1->kp)[3] > (kp2->kp)[3])
+                return 1;
+            else if ((kp1->kp)[3] < (kp2->kp)[3])
+                return -1;
+            else
+            {
+				if ((kp1->kp)[0] > (kp2->kp)[0])
+					return 1;
+				else if ((kp1->kp)[0] < (kp2->kp)[0])
+					return -1;
+				else
+				{
+					printf("same pos\n");
+					fflush(stdout);
+					return 0;
+				} 
+            }
+#else					
+			if ((kp1->kp)[0] > (kp2->kp)[0])
                 return 1;
             else if ((kp1->kp)[0] < (kp2->kp)[0])
                 return -1;
             else
             {
                 printf("same pos\n");
+				fflush(stdout);
                 return 0;
             }
+#endif
         }
     }
 }
@@ -854,6 +1026,7 @@ int compare_us (const void * a, const void * b)
 
 uint32_t file_kmer_qsort()
 {
+#ifdef	LAST_DEBUG
     uint8_t k_i = 0;
     char char_s[32] = "";
     char char_l[64] = "";
@@ -872,7 +1045,16 @@ uint32_t file_kmer_qsort()
 
     long int line_cnt = 0;
     uint32_t i_line = 0;
-
+	
+#ifdef	UNPIPATH_OFF_K20
+	uint64_t line_tol = 0;
+    uint64_t* file_line_cnt = (uint64_t* )calloc(file_n, 8);
+	if(file_line_cnt == NULL)
+	{
+		printf("fail to allocate memory\n");
+		exit(1);
+	}
+#else
     uint32_t line_tol = 0;
     uint32_t* file_line_cnt = (uint32_t* )calloc(file_n, 4);
 	if(file_line_cnt == NULL)
@@ -880,17 +1062,23 @@ uint32_t file_kmer_qsort()
 		printf("fail to allocate memory\n");
 		exit(1);
 	}
+#endif
 	
     while(!feof(file_s))
     {
         fgets(file_sta, 32, file_s);
         line_cnt = atol(file_sta);
-
+#ifdef	UNPIPATH_OFF_K20
+		if(i_line < file_n)
+            file_line_cnt[i_line] = (uint64_t )line_cnt;
+        if(i_line == file_n + 1)
+            line_tol = (uint64_t )line_cnt;
+#else
         if(i_line < file_n)
             file_line_cnt[i_line] = (uint32_t )line_cnt;
         if(i_line == file_n + 1)
             line_tol = (uint32_t )line_cnt;
-
+#endif
         i_line++;
     }
 
@@ -916,54 +1104,96 @@ uint32_t file_kmer_qsort()
     uint32_t kmer_s = 0;
     uint64_t kmer_l_p = 0Xffffffffffffffff;
     uint32_t kmer_f_p = 0Xffffffff;
-    uint64_t hash_n = (1 << (k << 1));
-
+    uint64_t hash_n = ((uint64_t )1 << (k << 1));
+	
+	printf("hash_n: %"PRId64"\n", hash_n);//268435456
+	
     //alloc the memory used to store hash graph
+#ifdef	UNPIPATH_OFF_K20
+	uint64_t* pos_array = (uint64_t* )calloc(line_tol, 8);
+	if(pos_array == NULL)
+	{
+		printf("fail to allocate memory pos_array\n");
+		fflush(stdout);
+		exit(1);
+	}
+	uint64_t* kmer_point = (uint64_t* )calloc(line_tol + 1, 8);
+	if(kmer_point == NULL)
+	{
+		printf("fail to allocate memory kmer_point\n");
+		fflush(stdout);
+		exit(1);
+	}
+	uint64_t* hash_array = (uint64_t* )calloc(hash_n + 1, 8);
+	if(hash_array == NULL)
+	{
+		printf("fail to allocate memory\n");
+		fflush(stdout);
+		exit(1);
+	}
+#else
     uint32_t* pos_array = (uint32_t* )calloc(line_tol, 4);
 	if(pos_array == NULL)
 	{
-		printf("fail to allocate memory\n");
+		printf("fail to allocate memory pos_array\n");
 		exit(1);
 	}
-	
-    //actually smaller than this amount
-    uint32_t* kmer_array = (uint32_t* )calloc(line_tol, 4);
-	if(kmer_array == NULL)
-	{
-		printf("fail to allocate memory\n");
-		exit(1);
-	}
-	
-    uint32_t* kmer_point = (uint32_t* )calloc(line_tol + 1, 4);
+	uint32_t* kmer_point = (uint32_t* )calloc(line_tol + 1, 4);
 	if(kmer_point == NULL)
 	{
-		printf("fail to allocate memory\n");
+		printf("fail to allocate memory kmer_point\n");
 		exit(1);
 	}
 	
-    uint32_t* hash_array = (uint32_t* )calloc(hash_n + 1, 4);
+	
+	uint32_t* hash_array = (uint32_t* )calloc(hash_n + 1, 4);
 	if(hash_array == NULL)
 	{
 		printf("fail to allocate memory\n");
 		exit(1);
 	}
-	
+#endif
+    //actually smaller than this amount
+    uint32_t* kmer_array = (uint32_t* )calloc(line_tol, 4);
+	if(kmer_array == NULL)
+	{
+		printf("fail to allocate memory\n");
+		fflush(stdout);
+		exit(1);
+	}
+
     uint8_t* edge_array = (uint8_t* )calloc(line_tol, 1);
 	if(edge_array == NULL)
 	{
-		printf("fail to allocate memory\n");
+		printf("fail to allocate memory edge_array\n");
+		fflush(stdout);
 		exit(1);
 	}
 	
-    printf("total number of chars to allocate: %" PRIu64 "\n", (((uint64_t )line_tol) << 2));
-
+	uint8_t* edge_flag = (uint8_t* )calloc(line_tol, 1);
+	if(edge_flag == NULL)
+	{
+		printf("fail to allocate memory edge_flag\n");
+		fflush(stdout);
+		exit(1);
+	}
+	
+    printf("total number of chars to allocate: %" PRIu64 "\n", (((uint64_t )line_tol) << 2));//36215262392
+	fflush(stdout);
+	
     uint64_t kmerf_cnt = 0;
     uint32_t hash_add = 0;
 
-    uint8_t input;
-    uint8_t output;
-
+    uint8_t input = 0;
+    uint8_t output = 0;
+	
+#ifdef	UNPIPATH_OFF_K20
+	uint64_t tmp_pos64 = 0;
+	uint64_t file_line_cnt_p = 0;
+#else
     uint32_t file_line_cnt_p = 0;
+#endif
+	
     const uint32_t edge_bit = 1;
 	uint32_t hash_first = 0;
 
@@ -986,10 +1216,10 @@ uint32_t file_kmer_qsort()
             k_p_file = (k_p* )calloc(file_line_cnt[i], sizeof(k_p));
             fread(k_p_file, sizeof(k_p), file_line_cnt[i], file_p[i]);
 
-            qsort(k_p_file, file_line_cnt[i], 12, compare);
+            qsort(k_p_file, file_line_cnt[i], sizeof(k_p), compare);
 
-            printf("has finished %u file sorting\n",i);
-
+            printf("has finished %u file sorting: %u\n", i, file_line_cnt[i]);
+		
             //load into hash graph
             kmer_l_p = 0Xffffffffffffffff;
             kmer_f_p = 0Xffffffff;
@@ -998,11 +1228,21 @@ uint32_t file_kmer_qsort()
             {
                 //add position
                 //also can write to file directly
+#ifdef	UNPIPATH_OFF_K20
+				tmp_pos64 = (k_p_file[k_p_i].kp)[3];
+				
+				pos_array[k_p_i + file_line_cnt_p] = ((tmp_pos64 << 32) | ((k_p_file[k_p_i].kp)[0]));
+				
+#else
                 pos_array[k_p_i + file_line_cnt_p] = (k_p_file[k_p_i].kp)[0];
-
+#endif
                 //get first and whole, also get input and output char
                 bit32a_bit64((k_p_file[k_p_i].kp), 3, k_t - f, k_t - k, kmer_i, kmer_l, kmer_f, kmer_s, input, output)
 
+#ifdef	DEBUG_NOT_FOUND
+				//0 8258096 126 8258096
+				printf("\nreadin: k_p_i %u %u %u %u %u\n", k_p_i, (uint16_t )((k_p_file[k_p_i].kp)[1]), ((k_p_file[k_p_i].kp)[2]), kmer_f, kmer_l);
+#endif				
 				bit32_kmer(kmer_l, k_t - f, k_i, char_l)
 
 				if(kmer_l != kmer_l_p)
@@ -1012,7 +1252,11 @@ uint32_t file_kmer_qsort()
 
                     //new kmer begins and add pos number to kmer
                     kmer_array[kmerf_cnt] = kmer_s;
-
+#ifdef	DEBUG_NOT_FOUND
+					printf("kmer: %u\n\n", kmer_s);
+					if(kmerf_cnt > 0)
+						printf("pre edge: %u\n", edge_array[kmerf_cnt - 1]);
+#endif
                     kmer_point[kmerf_cnt] = k_p_i + file_line_cnt_p;
 
                     if(kmer_f != kmer_f_p)
@@ -1020,18 +1264,26 @@ uint32_t file_kmer_qsort()
                         //new hash address and add number to hash
                         hash_add = (i << ((k - f) << 1)) + kmer_f;
                         hash_array[hash_add] = kmerf_cnt;
-
+#ifdef	DEBUG_NOT_FOUND
+						printf("hash: %u %u\n\n\n", hash_add,kmerf_cnt );
+#endif						
 						if(kmerf_cnt == 0)	hash_first = hash_add;
                     }
                     ++kmerf_cnt;
+					
+					
                 }
-
+#ifdef	DEBUG_NOT_FOUND
+				printf("edge: %u %u %u\n", kmerf_cnt, input, output);
+#endif				
                 //add kmer edge
                 if(charToDna5[input] <= 3)
                     edge_array[kmerf_cnt - 1] |= (edge_bit << (7 - charToDna5[input]));
+				
                 if(charToDna5[output] <= 3)
                     edge_array[kmerf_cnt - 1] |= (edge_bit << (3 - charToDna5[output]));
-
+				else	edge_flag[kmerf_cnt - 1] = 1;
+				
                 kmer_l_p = kmer_l;
                 kmer_f_p = kmer_f;
 
@@ -1040,7 +1292,8 @@ uint32_t file_kmer_qsort()
             }
 
             printf("has finished %u file loading\n",i);
-
+			fflush(stdout);
+			
             //end loading
 
             //end output
@@ -1060,6 +1313,34 @@ uint32_t file_kmer_qsort()
     }
     free(file_p);
 
+	
+	//for debug from here///////////////
+/*
+	FILE* fp_kmer_point_w = fopen("/home/ghz/viruses_index_all/tmp_kmer_point", "wb");
+    if(fp_kmer_point_w == NULL)
+	{
+		printf("cannot open the kmer point tmp file\n");
+		//exit(1);
+	}
+	
+	fwrite(kmer_point, 8, kmerf_cnt + 1, fp_kmer_point_w);//line_tol
+	
+	fclose(fp_kmer_point_w);
+
+	fp_kmer_point_w = fopen("/home/ghz/viruses_index_all/tmp_kmer_pos", "wb");
+    if(fp_kmer_point_w == NULL)
+	{
+		printf("cannot open the kmer pos tmp file\n");
+		//exit(1);
+	}
+	
+	fwrite(pos_array, 8, file_line_cnt_p, fp_kmer_point_w);//line_tol
+	
+	fclose(fp_kmer_point_w);
+*/
+	
+	////////////////
+	
     //traverse the graph and get supernode
 
     char ws[KT_LENGTH_MAX+2] = "";
@@ -1078,6 +1359,7 @@ uint32_t file_kmer_qsort()
     if(fp_us == NULL)
 	{
 		printf("cannot open the unipath seq file\n");
+		fflush(stdout);
 		exit(1);
 	}
 
@@ -1086,9 +1368,11 @@ uint32_t file_kmer_qsort()
     if(fp_usf_b == NULL)
 	{
 		printf("cannot open the unipath seq offset binary file\n");
+		fflush(stdout);
 		exit(1);
 	}
 
+	/*
     //unipath branch node file
     fp_ue = fopen(uniedge, "wb");
     if(fp_ue == NULL)
@@ -1096,16 +1380,8 @@ uint32_t file_kmer_qsort()
 		printf("cannot open the unipath branch node file\n");
 		exit(1);
 	}
+	*/
 	
-
-#ifdef UNPIPATH_OFF_K20
-	uint64_t unioff = 0;
-	uint64_t uni_kmer_off = 0;
-#else
-	uint32_t unioff = 0;
-	uint32_t uni_kmer_off = 0;
-#endif
-
 	uint32_t ue_n = 0;
 	uint32_t uni_offset_ori = 0;
     uint64_t kmer_ws = 0;
@@ -1114,17 +1390,20 @@ uint32_t file_kmer_qsort()
     uint64_t kmer_ss = 0;
     uint64_t kmer_wsn = 0;
     uint32_t t_hash_i = 0;
-    uint32_t t_kmer_i = 0;
+    
     uint8_t node_i = 0;
     uint8_t edge_i = 0;
     uint8_t edge_out = 0;
     int64_t binary_r = 0;
-    const uint64_t one_bit64 = 1;
+    uint64_t one_bit64 = 1;
+#ifdef	UNPIPATH_OFF_K20
+	uint64_t hash_v_p = 0;
+	uint64_t t_kmer_i = 0;
+#else
     uint32_t hash_v_p = 0;
+	uint32_t t_kmer_i = 0;
+#endif
     uint32_t super_node_id = 0;
-    uint32_t uni_max_l = 0;
-    uint32_t uni_l = 0;
-    uint32_t uni_tmp = 0;
     uint8_t uni_edge = 0;
 
     //for statistic
@@ -1148,45 +1427,55 @@ uint32_t file_kmer_qsort()
     }
 
     printf("finish filling the hash blank\n");
-
-	uint64_t usf_n = 0;
+	fflush(stdout);
+	
+	uint64_t usf_n = 1;
 
 #ifdef UNPIPATH_OFF_K20
+	uint64_t uni_max_l = 0;
+    uint64_t uni_l = 0;
+	uint64_t uni_tmp = 0;
+	uint64_t unioff = 0;
+	uint64_t uni_kmer_off = 0;
     fwrite(&unioff, 8, 1, fp_usf_b);
-#else
-	fwrite(&unioff, 4, 1, fp_usf_b);
-#endif
-
-	usf_n++;
-
-#ifdef UNPIPATH_OFF_K20
 	uint64_t* uni_offset = (uint64_t* )calloc(kmerf_cnt, 8);
 #else
+	uint32_t uni_max_l = 0;
+    uint32_t uni_l = 0;
+	uint32_t uni_tmp = 0;
+	uint32_t unioff = 0;
+	uint32_t uni_kmer_off = 0;
+	fwrite(&unioff, 4, 1, fp_usf_b);
 	uint32_t* uni_offset = (uint32_t* )calloc(kmerf_cnt, 4);
 #endif
 
 	if(uni_offset == NULL)
 	{
 		printf("Failed to allocate the unipath offset array\n");
+		fflush(stdout);
 		exit(1);
 	}
 
-
-	printf("begin creating unipath\n");
+	printf("begin creating unipath: %"PRId64"\n", hash_n);
+	fflush(stdout);
 	
 	uint32_t uni_node_cnt = 0;
 
-    for(t_hash_i = 0; t_hash_i < hash_n; t_hash_i++)
+    for(t_hash_i = 0; t_hash_i < hash_n; t_hash_i++)//268435456
     {
+		//printf("\n%u %"PRId64" %"PRId64" %"PRId64"\n", t_hash_i, hash_array[t_hash_i], hash_array[t_hash_i + 1], hash_array[t_hash_i + 1] - hash_array[t_hash_i]);
+		
         for(t_kmer_i = hash_array[t_hash_i]; t_kmer_i < hash_array[t_hash_i + 1]; t_kmer_i++)
         {
+			//printf("%u ", kmer_array[t_kmer_i]);
+			
             //get the whole kmer
             //kmer_array[t_kmer_i]: get last kmer
             kmer_ws = (((uint64_t )t_hash_i) << ((k_t - k) << 1)) + kmer_array[t_kmer_i];
 
             bit32_kmer(kmer_ws, k_t, kmer_i, ws)
 
-            node_i = node_indentity(edge_array[t_kmer_i]);
+            node_i = node_indentity(edge_array[t_kmer_i], edge_flag[t_kmer_i]);
 
             if(node_i == 1)	linear_cnt++;
 
@@ -1215,7 +1504,13 @@ uint32_t file_kmer_qsort()
                 if(node_i == 2)	fy_flag = 1;
                 if((node_i == 3) || (node_i == 5))
                 {
-                    if(strlen(ws) != k_t)	exit(1);
+                    if(strlen(ws) != k_t)
+					{
+						//printf("k_t not eq 3 5, %u %u\n", strlen(ws), k_t);
+						printf("kmer length error\n");
+						fflush(stdout);
+						exit(1);
+					}
 
                     uni_offset[t_kmer_i] = uni_kmer_off;
 
@@ -1232,7 +1527,13 @@ uint32_t file_kmer_qsort()
                 d_flag = 0;
                 if((node_i == 4) || (node_i == 6))
                 {
-                    if(strlen(ws) != k_t)	exit(1);
+                    if(strlen(ws) != k_t)
+					{
+						//printf("k_t not eq 4 6, %u %u\n", strlen(ws), k_t);
+						printf("kmer length error\n");
+						fflush(stdout);
+						exit(1);
+					}
 
                     uni_offset[t_kmer_i] = uni_kmer_off;
 
@@ -1258,7 +1559,7 @@ uint32_t file_kmer_qsort()
                     fprintf(fp_us, "\n%s",ws);
 
                     uni_edge |= (edge_array[t_kmer_i] & 0Xf);
-                    fwrite(&uni_edge, 1, 1, fp_ue);
+                    //fwrite(&uni_edge, 1, 1, fp_ue);
 					ue_n++;
 
                     uni_edge = 0;
@@ -1266,7 +1567,13 @@ uint32_t file_kmer_qsort()
 
                 if(node_i == 8)
                 {
-                    if(strlen(ws) != k_t)	exit(1);
+                    if(strlen(ws) != k_t)
+					{
+						//printf("k_t not eq 8, %u %u\n", strlen(ws), k_t);
+						printf("kmer length error\n");
+						fflush(stdout);
+						exit(1);
+					}
 
                     uni_offset[t_kmer_i] = uni_kmer_off;
 
@@ -1287,7 +1594,7 @@ uint32_t file_kmer_qsort()
 
                     fprintf(fp_us, "\n%s",ws);
 
-                    fwrite(&uni_edge, 1, 1, fp_ue);
+                    //fwrite(&uni_edge, 1, 1, fp_ue);
 					ue_n++;
 
                     uni_edge = 0;
@@ -1314,25 +1621,42 @@ uint32_t file_kmer_qsort()
 
                     bit32_kmer(kmer_fs, k, kmer_i, fs)
                     bit32_kmer(kmer_ss, k_t-k, kmer_i, ss)
-
+#ifdef	UNPIPATH_OFF_K20
+					binary_r = binsearch_offset_index64(kmer_ss, kmer_array, hash_array[kmer_fs + 1] - hash_array[kmer_fs], hash_array[kmer_fs]);
+#else
                     binary_r = binsearch_offset_index(kmer_ss, kmer_array, hash_array[kmer_fs + 1] - hash_array[kmer_fs], hash_array[kmer_fs]);
+#endif
 
                     if(binary_r == -1)
                     {
+						printf("kmer search error\n");
+#ifdef	DEBUG_64BIT
+						//504 2240 3090 3088
+						printf("binsearch_offset_index1, not found %u %u %"PRId64" %"PRId64"\n", kmer_fs, kmer_ss, hash_array[kmer_fs + 1], hash_array[kmer_fs]);
+						uint64_t tmp_j = 0;
+						printf("\n");
+						for(tmp_j = hash_array[kmer_fs]; tmp_j < hash_array[kmer_fs + 1]; tmp_j++)
+							printf("%u\n", kmer_array[tmp_j]);
+#endif						
+						fflush(stdout);
 						exit(1);
                     }
 
                     kmer_wsli = kmer_wsn;
 
                     //record seq
-                    node_i = node_indentity(edge_array[binary_r]);
+                    node_i = node_indentity(edge_array[binary_r], edge_flag[binary_r]);
                     n_flag = 0;	//2 4 6
 
                     if(((d_flag == 1) || (fy_flag == 1)) && ((node_i == 1) || (node_i == 2) || (node_i == 7)))
                     {
                         if(strlen(wsn) != k_t)
 						{
-							printf("wrong kmer length\n");
+							printf("kmer length error\n");
+#ifdef	DEBUG_64BIT
+							printf("wrong kmer length %u %u\n", strlen(wsn), k_t);
+#endif							
+							fflush(stdout);
 							exit(1);
 						}
 
@@ -1368,13 +1692,14 @@ uint32_t file_kmer_qsort()
 
                     l_flag = 0;
                     li_cnt = 0;
-                    while(node_indentity(edge_array[binary_r]) == 1)
+                    while(node_indentity(edge_array[binary_r], edge_flag[binary_r]) == 1)
                     {
                         ++li_cnt;
                         edge_out = edgeout_node(edge_array[binary_r]);
                         if(edge_out == 4)
                         {
-                            printf("error of edge identification\n");
+                            printf("edge identification error \n");
+							fflush(stdout);
                             exit(1);
                         }
 
@@ -1391,9 +1716,20 @@ uint32_t file_kmer_qsort()
 
 						bit32_kmer(kmer_fs, k, kmer_i, fs)
 						bit32_kmer(kmer_ss, k_t-k, kmer_i, ss)
-
+#ifdef	UNPIPATH_OFF_K20
+						binary_r = binsearch_offset_index64(kmer_ss, kmer_array, hash_array[kmer_fs + 1] - hash_array[kmer_fs], hash_array[kmer_fs]);
+#else
                         binary_r = binsearch_offset_index(kmer_ss, kmer_array, hash_array[kmer_fs + 1] - hash_array[kmer_fs], hash_array[kmer_fs]);
-
+#endif						
+						if(binary_r == -1)
+						{
+							printf("kmer search error\n");
+#ifdef	DEBUG_64BIT
+							printf("binsearch_offset_index2, not found %u %u %"PRId64" %"PRId64"\n", kmer_fs, kmer_ss, hash_array[kmer_fs + 1], hash_array[kmer_fs]);
+#endif							
+							fflush(stdout);
+							exit(1);
+						}
 						uni_offset_ori = uni_offset[binary_r];
 						uni_offset[binary_r] = uni_kmer_off;
 
@@ -1402,7 +1738,7 @@ uint32_t file_kmer_qsort()
                         kmer_wsli = kmer_wsn;
                     }
 
-                    node_i = node_indentity(edge_array[binary_r]);
+                    node_i = node_indentity(edge_array[binary_r], edge_flag[binary_r]);
 
                     if(((node_i == 3) || (node_i == 4) || (node_i == 8)) && (l_flag == 1))
                     {
@@ -1436,7 +1772,7 @@ uint32_t file_kmer_qsort()
 							else	uni_edge |= (edge_array[t_kmer_i] & 0Xf);
 						}
 
-                        fwrite(&uni_edge, 1, 1, fp_ue);
+                        //fwrite(&uni_edge, 1, 1, fp_ue);
 						ue_n++;
 
                         uni_edge = 0;
@@ -1448,8 +1784,12 @@ uint32_t file_kmer_qsort()
 
             uni_node_cnt++;
         }
-    }
-
+		
+	}
+	
+	if(edge_array)	free(edge_array);
+	if(edge_flag)	free(edge_flag);
+	
     fprintf(fp_us,"\n");
 
     printf("number of supernode: %u\n", super_node_id);
@@ -1461,19 +1801,28 @@ uint32_t file_kmer_qsort()
     printf("number of branch blunt node: %u \n", b_blunt_cnt);
     printf("number of end blunt node: %u \n", e_blunt_cnt);
     printf("number of ends blunt node: %u \n", es_blunt_cnt);
+	
+	fflush(stdout);
+	
+#ifdef	UNPIPATH_OFF_K20
+	printf("the max length of supernode: %"PRId64"\n", uni_max_l);
+#else
     printf("the max length of supernode: %u \n", uni_max_l);
-
+#endif
+	
     //end traverse
-	fclose(fp_ue);
+	//fclose(fp_ue);
     fclose(fp_us);
     fclose(fp_usf_b);
 
-	printf("begin wrtting hash and kmer array and offset on unipath into file\n");
-
+	printf("begin wrtting hash and kmer array and offset on unipath into file %"PRId64"\n", kmerf_cnt);
+	fflush(stdout);
+	
 	fp_hash = fopen(unihash_g,"wb");
 	if(fp_hash == NULL)
 	{
 		printf("wrong file route of hash to write\n");
+		fflush(stdout);
 		exit(1);
 	}
 	
@@ -1481,6 +1830,7 @@ uint32_t file_kmer_qsort()
 	if(fp_kmer == NULL)
 	{
 		printf("wrong file route of kmer to write\n");
+		fflush(stdout);
 		exit(1);
 	}
 	
@@ -1488,15 +1838,17 @@ uint32_t file_kmer_qsort()
 	if(fp_off == NULL)
 	{
 		printf("wrong file route of off_set to write\n");
+		fflush(stdout);
 		exit(1);
 	}
-	
-	fwrite(hash_array, 4, hash_n+1, fp_hash);
+
 	fwrite(kmer_array, 4, kmerf_cnt, fp_kmer);
 
 #ifdef UNPIPATH_OFF_K20
+	fwrite(hash_array, 8, hash_n+1, fp_hash);
 	fwrite(uni_offset, 8, kmerf_cnt, fp_off);
 #else
+	fwrite(hash_array, 4, hash_n+1, fp_hash);
 	fwrite(uni_offset, 4, kmerf_cnt, fp_off);
 #endif
 	if(uni_offset)	free(uni_offset);
@@ -1504,24 +1856,207 @@ uint32_t file_kmer_qsort()
 	fclose(fp_hash);
 	fclose(fp_kmer);
 	fclose(fp_off);
-
+#else
     //create the unipath position file
     printf("Begin creating unipath position and its point file\n");
+	fflush(stdout);
+
+	//for debug from here //////////////////////////////////
+	uint64_t one_bit64 = 1;
+	uint64_t kmer_fs = 0;
+    uint64_t kmer_ss = 0;
+	uint64_t kmerf_cnt = 0;
+	uint64_t usf_n = 0;
+	uint64_t ue_n = 0;
+	int64_t binary_r = 0;
+	
+	char fs[KF_LENGTH_MAX+2] = "";
+    char ss[KF_LENGTH_MAX+2] = "";
+	
+	//FILE* fp_hash = NULL;
+	//FILE* fp_kmer = NULL;
+	FILE* fp_kmer_point = NULL;
+	
+	uint64_t a_size = 0;
+	int64_t result_hash_g = 0;
+	int64_t result_kmer_g = 0;
+	uint64_t hash_n = 268435456;
+	uint64_t kmer_n = 0;
+	
+	hash_n = ((hash_n + 1) << 3);
+	
+	printf("Load unipath hash\n");
+	
+	fp_hash = fopen("/home/ghz/viruses_index_all/unipath_g.hash", "rb");
+    if(fp_hash == NULL)
+    {
+        fputs ("File error opening the graph hash file\n",stderr);
+        exit (1);
+    }
+	
+	a_size = (hash_n >> 3);
+    uint64_t* hash_array = (uint64_t* ) malloc (hash_n);
+    if (hash_array == NULL)
+    {
+        fputs("Memory error hash_array",stderr);
+        exit(2);
+    }
+
+    // copy the file into the buffer:
+    result_hash_g = fread (hash_array, 8, a_size, fp_hash);
+	
+    if (result_hash_g != a_size)
+    {
+        fputs("Reading error",stderr);
+        exit(3);
+    }
+	
+	fclose(fp_hash);
+
+    //read input graph kmer file
+    printf("Load unipath kmer\n");
+
+    fp_kmer = fopen("/home/ghz/viruses_index_all/unipath_g.kmer", "rb");
+    if(fp_kmer == NULL)
+    {
+        fputs ("File error opening the graph hash file\n",stderr);
+        exit (1);
+    }
+	
+	fseek(fp_kmer, 0, SEEK_END);// non-portable
+    kmer_n = ftell(fp_kmer);
+	rewind(fp_kmer);
+	
+    a_size = (kmer_n >> 2);
+    
+    //a_size = kmer_num;
+
+    uint32_t* kmer_array = (uint32_t* ) malloc (kmer_n);
+    if (kmer_array == NULL)
+    {
+        fputs ("Memory error kmer_array", stderr);
+        exit (2);
+    }
+
+    // copy the file into the buffer:
+    result_kmer_g = fread (kmer_array, 4, a_size, fp_kmer);
+    if (result_kmer_g != a_size)
+    {
+        fputs ("Reading error kmer_array", stderr);
+        exit (3);
+    }
+
+    fclose(fp_kmer);
+	
+	
+	printf("Load unipath kmer point\n");
+
+    fp_kmer_point = fopen("/home/ghz/viruses_index_all/tmp_kmer_point", "rb");
+    if(fp_kmer_point == NULL)
+    {
+        fputs ("File error opening the graph hash file\n",stderr);
+        exit (1);
+    }
+	
+	fseek(fp_kmer_point, 0, SEEK_END);// non-portable
+    kmer_n = ftell(fp_kmer_point);
+	rewind(fp_kmer_point);
+	
+    a_size = (kmer_n >> 3);
+    
+    //a_size = kmer_num;
+
+    uint64_t* kmer_point = (uint64_t* ) malloc (kmer_n);
+    if (kmer_point == NULL)
+    {
+        fputs ("Memory error kmer_point",stderr);
+        exit (2);
+    }
+
+    // copy the file into the buffer:
+    result_kmer_g = fread (kmer_point, 8, a_size, fp_kmer_point);
+    if (result_kmer_g != a_size)
+    {
+        fputs ("Reading error kmer_point",stderr);
+        exit (3);
+    }
+
+    fclose(fp_kmer_point);
+
+	printf("Load unipath kmer pos\n");
+
+    fp_kmer_point = fopen("/home/ghz/viruses_index_all/tmp_kmer_pos", "rb");
+    if(fp_kmer_point == NULL)
+    {
+        fputs ("File error opening the graph hash file\n",stderr);
+        exit (1);
+    }
+	
+	fseek(fp_kmer_point, 0, SEEK_END);// non-portable
+    kmer_n = ftell(fp_kmer_point);
+	rewind(fp_kmer_point);
+	
+    a_size = (kmer_n >> 3);
+    
+    //a_size = kmer_num;
+
+    uint64_t* pos_array = (uint64_t* ) malloc (kmer_n);
+    if (pos_array == NULL)
+    {
+        fputs ("Memory error pos_array",stderr);
+        exit (2);
+    }
+
+    // copy the file into the buffer:
+    result_kmer_g = fread (pos_array, 8, a_size, fp_kmer_point);
+    if (result_kmer_g != a_size)
+    {
+        fputs ("Reading error pos_array",stderr);
+        exit (3);
+    }
+
+    fclose(fp_kmer_point);
+
+	int uni_max_l = 600000;
+	uint32_t kmer_i = 0;
+	////////////////////////////////
+#endif	
 
     fp_us = fopen(uniseq, "r");
-    if(fp_us == NULL)	printf("cannot read the unipath seq file\n");
+    if(fp_us == NULL)
+	{
+		printf("cannot read the unipath seq file\n");
+		fflush(stdout);
+		exit(1);
+	}
 
     //unipath statistics
+	/*
     fp_sta = fopen(unista, "wb");
-    if(fp_sta == NULL)	printf("cannot open the unipath statistical file\n");
-
+    if(fp_sta == NULL)
+	{
+		printf("cannot open the unipath statistical file\n");
+		fflush(stdout);
+		exit(1);
+	}
+	*/
     //unipath position file
     fp_up = fopen(unipos, "wb");
-    if(fp_up == NULL)	printf("cannot open the unipath position file\n");
+    if(fp_up == NULL)
+	{
+		printf("cannot open the unipath position file\n");
+		fflush(stdout);
+		exit(1);
+	}
 
     //unipath position point file
     fp_upp = fopen(uniposp, "wb");
-    if(fp_upp == NULL)	printf("cannot open the unipath position point file\n");
+    if(fp_upp == NULL)
+	{
+		printf("cannot open the unipath position point file\n");
+		fflush(stdout);
+		exit(1);
+	}
 
 	uint64_t up_n = 0;
 	uint64_t upp_n = 0;
@@ -1532,31 +2067,43 @@ uint32_t file_kmer_qsort()
     char* uni_in_seq = (char* )malloc(uni_max_l + 2);
 	if(uni_in_seq == NULL)
 	{
-		printf("fail to allocate memory\n");
+		printf("fail to allocate memory for unipath seq input array\n");
+		fflush(stdout);
 		exit(1);
 	}
 	
     char uni_fkmer[KT_LENGTH_MAX];
 
-    uint32_t uni_pos_i = 0;
-    uint64_t uni_kmer = 0;
     uint32_t uni_in_i = 0;
-    uint32_t r_cnt = 0;
     uint32_t line_l = 0;
-    uint32_t first_cnt = 0;
     uint32_t first_i = 0;
-    uint32_t second = 0;
 	uint32_t line_cntu = 0;
-    uint32_t cnt_cl_cnt = 0;
-
+    uint64_t cnt_cl_cnt = 0;
+    //the number of kmers in unipath seq hash kmer array
+    uint64_t us_h_n = 0;
+	
+#ifdef	UNPIPATH_OFF_K20
+	fwrite(&first_cnt_cl, 8, 1, fp_upp);
+	uint64_t* first = NULL;
+    uint64_t* first_pos = NULL;
+	uint64_t first_cnt = 0;
+	uint64_t r_cnt = 0;
+	uint64_t uni_pos_i = 0;
+	uint64_t pos_first = 0;
+	uint64_t* r = NULL;
+#else
+    fwrite(&first_cnt_cl, 4, 1, fp_upp);
 	uint32_t* first = NULL;
     uint32_t* first_pos = NULL;
-    uint32_t* r = NULL;
-
-    //the number of kmers in unipath seq hash kmer array
-    uint32_t us_h_n = 0;
-
-    fwrite(&first_cnt_cl, 4, 1, fp_upp);
+	uint32_t first_cnt = 0;
+	uint32_t r_cnt = 0;
+	uint32_t uni_pos_i = 0;
+	uint32_t pos_first = 0;
+	uint32_t* r = NULL;
+#endif
+	int64_t second = 0;
+	uint64_t uni_kmer = 0;
+	
 	upp_n++;
 
     //transfer to binary seq file
@@ -1569,10 +2116,15 @@ uint32_t file_kmer_qsort()
     uint64_t a_cnt = 0;
     uint32_t seq_i = 0;
     uint32_t w_offset = 0;
-	uint32_t pos_first = 0;
+	
 
     fp_us_b = fopen(uniseq_b, "wb");
-    if(fp_us_b == NULL)	printf("cannot open the unipath seq file\n");
+    if(fp_us_b == NULL)
+	{
+		printf("cannot open the unipath seq file\n");
+		fflush(stdout);
+		exit(1);
+	}		
 #ifdef UNI_SEQ64
 	memset(uni_arr, 0, (UNI_SEQ_WRI_ARR << 3));
 #else
@@ -1591,6 +2143,7 @@ uint32_t file_kmer_qsort()
         if(line_l < k_t)
         {
             printf("Error of unipath seq file: %u %u %s\n", line_cntu, line_l, uni_in_seq);
+			fflush(stdout);
             exit(1);
         }
         else
@@ -1617,24 +2170,51 @@ uint32_t file_kmer_qsort()
             //debug
             bit32_kmer(kmer_fs, k, kmer_i, fs)
             bit32_kmer(kmer_ss, k_t-k, kmer_i, ss)
-
+#ifdef	UNPIPATH_OFF_K20
+			binary_r = binsearch_offset_index64(kmer_ss, kmer_array, hash_array[kmer_fs + 1] - hash_array[kmer_fs], hash_array[kmer_fs]);
+#else
             binary_r = binsearch_offset_index(kmer_ss, kmer_array, hash_array[kmer_fs + 1] - hash_array[kmer_fs], hash_array[kmer_fs]);
-
+#endif
+			if(binary_r == -1)
+			{
+				printf("kmer search error\n");
+#ifdef	DEBUG_64BIT
+				printf("binsearch_offset_index, not found %u %u %"PRId64" %"PRId64"\n", kmer_fs, kmer_ss, hash_array[kmer_fs + 1], hash_array[kmer_fs]);
+#endif				
+				fflush(stdout);
+				exit(1);
+			}
             first_cnt = kmer_point[binary_r + 1] - kmer_point[binary_r];
-            first = (uint32_t* )calloc(first_cnt, 4);
-
-            first_pos = (uint32_t* )calloc(first_cnt, 4);
-
+			
+#ifdef	UNPIPATH_OFF_K20
+			first = (uint64_t* )calloc(first_cnt, 8);
+			first_pos = (uint64_t* )calloc(first_cnt, 8);
+#else
+			first = (uint32_t* )calloc(first_cnt, 4);
+			first_pos = (uint32_t* )calloc(first_cnt, 4);
+#endif
+          
+#ifdef	DEBUG_COMBINE
+			//printf("%u. line_l: %u\n\n", line_cntu, line_l);
+			//printf("poses:\n");
+#endif
             first_i = 0;
             for(uni_pos_i = kmer_point[binary_r]; uni_pos_i < kmer_point[binary_r + 1]; uni_pos_i++)
             {
                 first[first_i] = pos_array[uni_pos_i];
-
+				
+#ifdef	DEBUG_COMBINE
+				//printf("%"PRId64"\n", first[first_i]);
+#endif
+		
                 first_pos[first_i] = pos_array[uni_pos_i];
 
                 first_i++;
             }
-
+#ifdef	DEBUG_COMBINE
+			//printf("\n");
+#endif
+			
             uni_de = 0;
 
             for(uni_in_i = 1; uni_in_i < line_l - k_t + 1; uni_in_i++)
@@ -1643,17 +2223,41 @@ uint32_t file_kmer_qsort()
                 kmer_bit64(uni_kmer, k_t, kmer_i, uni_fkmer)
 
                 uint64_div(uni_kmer, kmer_fs, kmer_ss, k_t - k)
-
+				
+#ifdef	UNPIPATH_OFF_K20
+				second = binsearch_offset_index64(kmer_ss, kmer_array, hash_array[kmer_fs + 1] - hash_array[kmer_fs], hash_array[kmer_fs]);
+#else
                 second = binsearch_offset_index(kmer_ss, kmer_array, hash_array[kmer_fs + 1] - hash_array[kmer_fs], hash_array[kmer_fs]);
-
+#endif
+				
                 if(second != -1)
                 {
+#ifdef	UNPIPATH_OFF_K20
+					r_cnt = uni_pos_combine64(kmer_point, pos_array, first, first_cnt, second, &r);
+#else
                     r_cnt = uni_pos_combine(kmer_point, pos_array, first, first_cnt, second, &r);
+#endif
                 }
-                else	printf("error -1\n");  //fprintf(unipath_debug, "error -1\n");
+                else
+				{
+					printf("kmer search error\n");
+#ifdef	DEBUG_64BIT
+					// 200869072 37040 20 4294967272
+					printf("error -1 binsearch_offset_index, not found %u %u %"PRId64" %"PRId64"\n", kmer_fs, kmer_ss, hash_array[kmer_fs + 1], hash_array[kmer_fs]);
+#endif					
+					fflush(stdout);
+					exit(1);
+					//fprintf(unipath_debug, "error -1\n");
+				}
 
                 if(!r_cnt)
                 {
+					/*
+					printf("error unipath point\n");
+					fflush(stdout);
+					exit(1);
+					*/
+					
                     if(!uni_de)
                     {
                         for(uni_pos_i = 0; uni_pos_i < first_cnt; uni_pos_i++)
@@ -1671,6 +2275,9 @@ uint32_t file_kmer_qsort()
 
                 first_cnt = r_cnt;
                 first = r;
+
+				if(!r_cnt)	break;
+					
             }
 
             for(uni_pos_i = 0; uni_pos_i < first_cnt; uni_pos_i++)
@@ -1679,17 +2286,24 @@ uint32_t file_kmer_qsort()
 
 				if(pos_first <= START_POS_REF)
 				{
-					printf("error pos\n");
+					printf("combine pos error\n");
+					fflush(stdout);
 					exit(1);
 				}
-
+#ifdef	UNPIPATH_OFF_K20
+				fwrite(&pos_first, 8, 1, fp_up);
+#else
 				fwrite(&pos_first, 4, 1, fp_up);
+#endif
 				up_n++;
             }
 
             first_cnt_cl += first_cnt;
-
+#ifdef	UNPIPATH_OFF_K20
+			fwrite(&first_cnt_cl, 8, 1, fp_upp);
+#else
             fwrite(&first_cnt_cl, 4, 1, fp_upp);
+#endif
 			upp_n++;
 
             cnt_cl_cnt++;
@@ -1706,8 +2320,21 @@ uint32_t file_kmer_qsort()
 	fwrite(uni_arr, 1, UNI_SEQ_WRI_ARR, fp_us_b);
 #endif
 
+	//free hash graph memory
+	if(pos_array)	free(pos_array);
+    if(kmer_array)	free(kmer_array);
+    if(kmer_point)	free(kmer_point);
+    if(hash_array)	free(hash_array);
+	if(uni_in_seq)	free(uni_in_seq);
+    //for index file close
+    fclose(fp_us_b);
+    fclose(fp_up);
+    fclose(fp_upp);
+    fclose(fp_us);
+	
 	printf("begin writing info about size of index files\n");
-
+	fflush(stdout);
+	
 	fp_num = fopen(unisize, "wb");
 	if(fp_num == NULL)	printf("error of creating index size file\n");
 
@@ -1730,13 +2357,25 @@ uint32_t file_kmer_qsort()
 	sta_num_write = ue_n;
 	fwrite(&sta_num_write, 8, 1, fp_num);
 
+#ifdef	UNPIPATH_OFF_K20
+	sta_num_write = (up_n << 3);
+#else
 	sta_num_write = (up_n << 2);
+#endif
 	fwrite(&sta_num_write, 8, 1, fp_num);
 
+#ifdef	UNPIPATH_OFF_K20
+	sta_num_write = (upp_n << 3);
+#else	
 	sta_num_write = (upp_n << 2);
+#endif
 	fwrite(&sta_num_write, 8, 1, fp_num);
 
+#ifdef	UNPIPATH_OFF_K20
+	sta_num_write = ((hash_n + 1) << 3);
+#else
 	sta_num_write = ((hash_n + 1) << 2);
+#endif
 	fwrite(&sta_num_write, 8, 1, fp_num);
 
 	sta_num_write = (kmerf_cnt << 2);
@@ -1748,38 +2387,37 @@ uint32_t file_kmer_qsort()
 	sta_num_write = (kmerf_cnt << 2);
 #endif
 	fwrite(&sta_num_write, 8, 1, fp_num);
-
-	free(uni_in_seq);
-    free(file_line_cnt);
-    fclose(file_s);
-
-    //free hash graph memory
-	if(pos_array)	free(pos_array);
-    if(kmer_array)	free(kmer_array);
-    if(kmer_point)	free(kmer_point);
-    if(hash_array)	free(hash_array);
-
-
-    //for index file close
-    fclose(fp_us_b);
-    fclose(fp_up);
-    fclose(fp_upp);
-    fclose(fp_us);
-
-    //create pos-unipath table
-    build_pos_unipath();
-
+	
+	sta_num_write = 0;
+	fwrite(&sta_num_write, 8, 1, fp_num);
+	
 	sta_num_write = (((ref_seq_n >> 5) + 1) << 3);
 	fwrite(&sta_num_write, 8, 1, fp_num);
-
+	fflush(fp_num);
+	
+	fflush(fp_num);
+	
 	fclose(fp_num);
+	
+	
+    //free(file_line_cnt);
+    //fclose(file_s);
 
+    //create pos-unipath table
+    //build_pos_unipath();
+	
+	//printf("finish build position unipath\n");
+	//fflush(stdout);
+	
     //write into statistical data
+	/*
     fwrite(&w_offset, 4, 1, fp_sta);
-
     fflush(fp_sta);
 	
-	
+	fclose(fp_sta);
+	*/
+		
+#ifdef	HANDLE_DIR
 	//delete the div tmp folder
 	printf("deleting div temporary index file folder\n");
 	
@@ -1793,7 +2431,13 @@ uint32_t file_kmer_qsort()
 		strcat(rm_route, filename_div);
 		system(rm_route);
 	}
-
+	
+	memset(rm_route, 0, ROUTE_LENGTH_MAX);
+	strcpy(rm_route, sys_rm);
+	strcat(rm_route, uniseq);
+	system(rm_route);
+#endif
+	
     printf("finish index building\n");
 
     return w_offset;
@@ -1802,9 +2446,13 @@ uint32_t file_kmer_qsort()
 //create pos-unipath table
 void build_pos_unipath()
 {
+	/*
     printf("begin creating position unipath file\n");
+#ifdef	UNPIPATH_OFF_K20
+	printf("number of unipath positions: %"PRId64"\n",first_cnt_cl);
+#else
     printf("number of unipath positions: %u\n",first_cnt_cl);
-
+#endif
     //unipath position file
     fp_up = fopen(unipos, "rb");
     if(fp_up == NULL)	printf("cannot read the unipath position file\n");
@@ -1821,7 +2469,7 @@ void build_pos_unipath()
     uint32_t p_cnt_i = 0;
     uint32_t p_cnt_pre = 0;
     uint32_t p_i = 0;
-    uint64_t p_u_c = 0;
+    
     p_u* p_u_file = NULL;
 
     p_u_file = (p_u* )calloc(first_cnt_cl, sizeof(p_u));
@@ -1846,16 +2494,64 @@ void build_pos_unipath()
         fwrite(&(p_u_file[p_i].pos),4, 1, fp_pu);
         fwrite(&(p_u_file[p_i].uniid),4, 1, fp_pu);
     }
-
-	sta_num_write = (p_u_c << 3);
-	fwrite(&sta_num_write, 8, 1, fp_num);
-
-    free(p_u_file);
+	
+	free(p_u_file);
     fclose(fp_up);
     fclose(fp_upp);
     fclose(fp_pu);
+	
+	
+	uint64_t p_u_c = 0;
+	sta_num_write = (p_u_c << 3);
+	fwrite(&sta_num_write, 8, 1, fp_num);
+	*/
 }
 
+#ifdef	UNPIPATH_OFF_K20
+uint64_t uni_pos_combine64(uint64_t kmer_point[], uint64_t pos_array[], uint64_t first[], uint64_t first_cnt, int64_t second, uint64_t** r)
+{
+    uint64_t pos_i = 0;
+    uint64_t r_cnt = 0;
+    uint64_t alloc_cnt = 0;
+    uint64_t r_i = 0;
+    int64_t b_r = 0;
+
+    alloc_cnt = kmer_point[second + 1] - kmer_point[second];
+
+    r_cnt = (first_cnt > alloc_cnt ? first_cnt : alloc_cnt);
+    (*r) = (uint64_t* )calloc(r_cnt, 8);
+
+    //can change to less time usage
+    for(pos_i = 0; pos_i < first_cnt; pos_i++)
+    {
+        if((b_r = binsearch_offset_index_com64(first[pos_i] + 1, pos_array, alloc_cnt, kmer_point[second])) != -1)
+        {
+            (*r)[r_i] = first[pos_i] + 1;
+            r_i++;
+        }
+    }
+	
+#ifdef	DEBUG_COMBINE
+	if(r_i == 0)
+	{
+		printf("new\nposes:\n");
+		for(pos_i = 0; pos_i < first_cnt; pos_i++)
+			printf("%"PRId64"\n", first[pos_i]);
+		printf("\n");
+		
+		printf("poses:\n");
+		uint64_t tmp_se = 0;
+		for(tmp_se = kmer_point[second]; tmp_se < kmer_point[second + 1]; tmp_se++)
+			printf("%"PRId64"\n", pos_array[tmp_se]);
+	}
+#endif
+		
+    free(first);
+	
+	
+    return r_i;
+}
+#else
 uint32_t uni_pos_combine(uint32_t kmer_point[], uint32_t pos_array[], uint32_t first[], uint32_t first_cnt, uint32_t second, uint32_t** r)
 {
     uint32_t pos_i = 0;
@@ -1882,7 +2578,7 @@ uint32_t uni_pos_combine(uint32_t kmer_point[], uint32_t pos_array[], uint32_t f
 
     return r_i;
 }
-
+#endif
 //below is some operations on graph
 
 //get the number of 1 in one value
@@ -1898,23 +2594,27 @@ uint8_t one_number_uint(uint8_t n)
 }
 
 //identify branching node
-uint8_t node_indentity(uint8_t edge)
+uint8_t node_indentity(uint8_t edge, uint8_t edge_flag)
 {
-    uint8_t edge_out = 0;
-    uint8_t edge_in = 0;
-    edge_out = (edge & 0xf);
-    edge_in = (edge >> 4);
-    uint8_t node_i = 0;
-
-    if((one_number_uint(edge_in) == 1) && (one_number_uint(edge_out) == 1))	node_i =  1; //linear
-    if((one_number_uint(edge_in) == 1) && (one_number_uint(edge_out) > 1))	node_i =  2; //forward Y branch
-    if((one_number_uint(edge_in) > 1) && (one_number_uint(edge_out) == 1))	node_i =  3; //reverse Y branch
-    if((one_number_uint(edge_in) > 1) && (one_number_uint(edge_out) > 1))	node_i =  4; //X branch
-    if((one_number_uint(edge_in) == 0) && (one_number_uint(edge_out) == 1))	node_i =  5; //linear blunt
-    if((one_number_uint(edge_in) == 0) && (one_number_uint(edge_out) > 1))	node_i =  6; //branch blunt
-    if((one_number_uint(edge_in) == 1) && (one_number_uint(edge_out) == 0))	node_i =  7; //end blunt
-    if((one_number_uint(edge_in) > 1) && (one_number_uint(edge_out) == 0))	node_i =  8; //ends blunt
-
+	uint8_t node_i = 0;
+	
+	if(edge_flag)	node_i =  2;
+	else{
+		uint8_t edge_out = 0;
+		uint8_t edge_in = 0;
+		edge_out = (edge & 0xf);
+		edge_in = (edge >> 4);
+    
+		if((one_number_uint(edge_in) == 1) && (one_number_uint(edge_out) == 1))	node_i =  1; //linear
+		if((one_number_uint(edge_in) == 1) && (one_number_uint(edge_out) > 1))	node_i =  2; //forward Y branch
+		if((one_number_uint(edge_in) > 1) && (one_number_uint(edge_out) == 1))	node_i =  3; //reverse Y branch
+		if((one_number_uint(edge_in) > 1) && (one_number_uint(edge_out) > 1))	node_i =  4; //X branch
+		if((one_number_uint(edge_in) == 0) && (one_number_uint(edge_out) == 1))	node_i =  5; //linear blunt
+		if((one_number_uint(edge_in) == 0) && (one_number_uint(edge_out) > 1))	node_i =  6; //branch blunt
+		if((one_number_uint(edge_in) == 1) && (one_number_uint(edge_out) == 0))	node_i =  7; //end blunt
+		if((one_number_uint(edge_in) > 1) && (one_number_uint(edge_out) == 0))	node_i =  8; //ends blunt
+	}
+    
     return node_i;
 }
 
@@ -1934,7 +2634,7 @@ uint8_t edgeout_node(uint8_t edge)
 }
 
 //binary search offset
-int64_t binsearch_offset_index(uint64_t x, uint32_t v[], uint32_t n, uint32_t offset)
+int64_t binsearch_offset_index_com64(uint64_t x, uint64_t v[], uint64_t n, uint64_t offset)
 {
     int64_t low, high, mid;
 
@@ -1960,4 +2660,57 @@ int64_t binsearch_offset_index(uint64_t x, uint32_t v[], uint32_t n, uint32_t of
 
     return -1;
 }
+int64_t binsearch_offset_index64(uint32_t x, uint32_t v[], uint64_t n, uint64_t offset)
+{
+    int64_t low, high, mid;
+
+    low = 0;
+    high = n - 1;
+
+    while ( low <= high )
+    {
+        mid = (low + high) >> 1;
+        if(x < v[mid + offset])
+        {
+            high = mid - 1;
+        }
+        else if(x > v[mid + offset])
+        {
+            low = mid + 1;
+        }
+        else  /*found match*/
+        {
+            return mid + offset;
+        }
+    }
+
+    return -1;
+}
+int64_t binsearch_offset_index(uint32_t x, uint32_t v[], uint32_t n, uint32_t offset)
+{
+    int64_t low, high, mid;
+
+    low = 0;
+    high = n - 1;
+
+    while ( low <= high )
+    {
+        mid = (low + high) >> 1;
+        if(x < v[mid + offset])
+        {
+            high = mid - 1;
+        }
+        else if(x > v[mid + offset])
+        {
+            low = mid + 1;
+        }
+        else  /*found match*/
+        {
+            return mid + offset;
+        }
+    }
+
+    return -1;
+}
+
 

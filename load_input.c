@@ -22,17 +22,26 @@ uint8_t* buffer_seq = NULL;
 #ifdef UNPIPATH_OFF_K20
 uint64_t* buffer_seqf = NULL;
 uint64_t* buffer_off_g = NULL;
+uint64_t* buffer_p = NULL;
+uint64_t* buffer_pp = NULL;
+uint64_t* buffer_hash_g = NULL;
+uint64_t first_cnt_cl = 0;
+uint64_t chr_end_n[MAX_CHR_NUM];
 #else
 uint32_t* buffer_seqf = NULL;
 uint32_t* buffer_off_g = NULL;
-#endif
-
-uint8_t* buffer_edge = NULL;
 uint32_t* buffer_p = NULL;
 uint32_t* buffer_pp = NULL;
+uint32_t* buffer_hash_g = NULL;
+uint32_t first_cnt_cl = 0;
+uint32_t chr_end_n[MAX_CHR_NUM];
+#endif
+
+//uint8_t* buffer_edge = NULL;
+
 uint32_t* buffer_pupos = NULL;
 uint32_t* buffer_puid = NULL;
-uint32_t* buffer_hash_g = NULL;
+
 uint32_t* buffer_kmer_g = NULL;
 	
 uint64_t result_ref_seq = 0;
@@ -55,7 +64,7 @@ const char* uniedges = "unipath.edge";
 const char* unipus = "unipath.pu";
 const char* uniposs = "unipath.pos";
 const char* uniposps = "unipath.posp";
-const char* unistas = "unipath.sta";
+//const char* unistas = "unipath.sta";
 const char* unihash_gs = "unipath_g.hash";
 const char* unikmer_gs = "unipath_g.kmer";
 const char* unioff_gs = "unipath_g.offset";
@@ -66,6 +75,7 @@ const char* divs = "div/";
 const char* f_size = "unipath.size";
 const char* sys_c_mkdir = "mkdir ";
 const char* sys_c_rm = "rm -rf ";
+const char* sys_rm = "rm ";
 
 char sam_result[ROUTE_LENGTH_MAX];
 char read_fastq1[ROUTE_LENGTH_MAX];
@@ -82,7 +92,7 @@ char uniedge[ROUTE_LENGTH_MAX];
 char unipu[ROUTE_LENGTH_MAX];
 char unipos[ROUTE_LENGTH_MAX];
 char uniposp[ROUTE_LENGTH_MAX];
-char unista[ROUTE_LENGTH_MAX];
+//char unista[ROUTE_LENGTH_MAX];
 char unihash_g[ROUTE_LENGTH_MAX];
 char unikmer_g[ROUTE_LENGTH_MAX];
 char unioff_g[ROUTE_LENGTH_MAX];
@@ -97,7 +107,7 @@ FILE* fp_ref_seq = NULL;
 FILE* fp_us_b = NULL;
 FILE* fp_usf_b = NULL;
 FILE* fp_ub = NULL;
-FILE* fp_ue = NULL;
+//FILE* fp_ue = NULL;
 FILE* fp_up = NULL;
 FILE* fp_upp = NULL;
 FILE* fp_pu = NULL;
@@ -116,8 +126,6 @@ FILE* unipath_debug = NULL;
 const uint8_t f = 4;
 const uint8_t k = 14;
 uint8_t k_t = 22;	
-uint32_t first_cnt_cl = 0;
-uint32_t chr_end_n[MAX_CHR_NUM];
 uint32_t chr_file_n = 1;
 uint8_t thread_n = 1;
 uint32_t upper_ins = 700;
@@ -203,12 +211,89 @@ static int load_input_usage()
 	return 1;
 }
 
+int help_usage()
+{
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Program:	deBGA (De bruijn graph nucleotide alignment)\n");
+	//fprintf(stderr, "Version:	%s\n", COMMAND_VERSION);
+	//fprintf(stderr, "Contact:	Hongzhe Guo <hzguo@hit.edu.cn>\n\n");
+	fprintf(stderr, "Usage:  	deBGA <command> [options]\n\n");
+	fprintf(stderr, "Command:	index		index sequences in the FASTA format\n");
+	fprintf(stderr, "		aln      	pair-end and single-end reads seed reduction and alignment based on De bruijn graph\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Usage:   deBGA index [options] reference.fasta <index_route> \n\n");
+	fprintf(stderr, "Options: -k INT      the k-mer length of the vertices of RdBG [20-28]\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Usage:  	deBGA aln [options] <index_route> <read pair-end1.fq> [read pair-end2.fq] <result_file.sam>\n\nOptions:\n");
+	fprintf(stderr, "	-k INT	the minimum length of a valid Uni-MEM seed [21-28]\n");	
+	fprintf(stderr, "	-s INT	the number of iterations of re-seeding [%u]\n", cir_fix_n);
+	fprintf(stderr, "	-i INT	the minimum interval of seeding [%u]\n", seed_step);
+	fprintf(stderr, "	-n INT	the maximum allowed number of hits per seed [%u]\n", pos_n_max);
+	fprintf(stderr, "	-c NUM	the threshold on the edit distance for early stop [%.2f]\n", max_pair_score_r);
+	fprintf(stderr, "	--cl NUM the adjusted threshold on the edit distance for early stop [%.2f]\n", last_circle_rate);
+	fprintf(stderr, "	--local  the local alignment option for confident alignment\n");
+	fprintf(stderr, "	--local-match NUM the score for a matched base in the local alignment [%d]\n", mat_score);
+	fprintf(stderr, "	--local-mismatch NUM the penalty for a mismatched base in the local alignment [%d]\n", mis_score);
+	fprintf(stderr, "	--local-gap-open NUM the penalty for a gap open in the local alignment [%d]\n", gapo_score);
+	fprintf(stderr, "	--local-gap-extension NUM the penalty for gap extension in the local alignment [%d]\n", gape_score);
+	fprintf(stderr, "	-u INT	the upper limit of insert size (only for pair-end reads) [%u] \n", upper_ins);
+	fprintf(stderr, "	-f INT	the lower limit of insert size (only for pair-end reads) [%u] \n", floor_ins);
+	fprintf(stderr, "	-o INT	the maximum number of alignment output [%u]\n", cus_ali_n);
+	fprintf(stderr, "	-x INT	the maximum number of alignment output for anchoring alignment [%u]\n", cus_max_output_ali);
+	fprintf(stderr, "	-l INT	the maximum allowed read length [%u]\n", readlen_max);
+	fprintf(stderr, "	-e INT	the budget for single-end alignment [%u]\n", seed_filter_pos_numn);
+	fprintf(stderr, "	-p INT	the number of threads [%u]\n", thread_n);
+	//fprintf(stderr, "	--mg 	use the mode of multi-genomes\n");
+	//fprintf(stderr, "	-v NUM	the max editing distance rate for LandauVishkin [%.2f] (only for pair-end)\n", lv_rate);
+	//fprintf(stderr, "	-r INT	seed coverage length filter [%u]\n", length_reduce);
+	//fprintf(stderr, "	--aanchor NUM	the max rate of mismatch alignment on anchor [%.2f]\n", mis_match_r_single);
+	//fprintf(stderr, "	--vanchor NUM	the max editing distance rate for LandauVishkin on anchor [%.2f]\n", lv_rate_anchor);
+	
+	fprintf(stderr, "	Please refer to the following link for more detailed information about the options: https://github.com/HIT-Bioinformatics/deBGA\n");
+	fprintf(stderr, "\n");
+
+	
+	return 1;
+}
+
+enum {
+	PAR_LOCAL_KSW,
+	PAR_LAST_CIRCLE,
+	PAR_MULTI_GENOMES,
+	PAR_MAT_SCORE,
+	PAR_MIS_SCORE,
+	PAR_GAPO_SCORE,
+	PAR_GAPE_SCORE,
+	PAR_A_ANCHOR,
+	PAR_LV_ANCHOR,
+	PAR_HELP
+};
+
+static const char *short_option = "k:p:u:f:l:r:i:s:n:o:x:a:c:g:e:v:";
+static struct option long_option[] = {
+	{(char*)"local", no_argument,  0, PAR_LOCAL_KSW},
+	{(char*)"cl", required_argument, 0, PAR_LAST_CIRCLE},
+	{(char*)"mg", no_argument, 0, PAR_MULTI_GENOMES},
+	{(char*)"local-match", required_argument, 0, PAR_MAT_SCORE},
+	{(char*)"local-mismatch", required_argument, 0, PAR_MIS_SCORE},
+	{(char*)"local-gap-open", required_argument, 0, PAR_GAPO_SCORE},
+	{(char*)"local-gap-extension", required_argument, 0, PAR_GAPE_SCORE},
+	{(char*)"aanchor", required_argument, 0, PAR_A_ANCHOR},
+	{(char*)"vanchor", required_argument, 0, PAR_LV_ANCHOR},
+	{(char*)"help", required_argument, 0, PAR_HELP},
+	{(char*)0, 0, 0, 0}
+};
+
 int load_input_index(int argc, char *argv[])
 {
 	int c = 0;
-	while ((c = getopt(argc, argv, "k:")) >= 0) {
+
+	//while ((c = getopt(argc, argv, "k:")) >= 0) {
+	while((c = getopt_long(argc, argv, short_option, long_option, NULL)) != -1){
 		switch (c) {
 		case 'k': k_t = atoi(optarg); break;
+		case PAR_HELP: return index_build_usage();
+		//default: return index_build_usage();
 		}
 	}
 	
@@ -253,11 +338,11 @@ int load_input_index(int argc, char *argv[])
 	memset(uniposp, 0, ROUTE_LENGTH_MAX);
 	strcpy(uniposp, index_route);
 	strcat(uniposp, uniposps);
-	
+	/*
 	memset(unista, 0, ROUTE_LENGTH_MAX);
 	strcpy(unista, index_route);
 	strcat(unista, unistas);
-	
+	*/
 	memset(unihash_g, 0, ROUTE_LENGTH_MAX);
 	strcpy(unihash_g, index_route);
 	strcat(unihash_g, unihash_gs);
@@ -290,6 +375,7 @@ int load_input_index(int argc, char *argv[])
 	strcpy(unisize, index_route);
 	strcat(unisize, f_size);
 	
+#ifdef	HANDLE_DIR
 	char create_route[ROUTE_LENGTH_MAX];
 	char rm_route[ROUTE_LENGTH_MAX];
 	DIR* directory_pointer = NULL;
@@ -316,39 +402,13 @@ int load_input_index(int argc, char *argv[])
 	
 	if((directory_pointer = opendir(filename_div))==NULL)
 		system(create_route);
-
+#endif
+		
 	return 0;
 }
 
-enum {
-	PAR_LOCAL_KSW,
-	PAR_LAST_CIRCLE,
-	PAR_MULTI_GENOMES,
-	PAR_MAT_SCORE,
-	PAR_MIS_SCORE,
-	PAR_GAPO_SCORE,
-	PAR_GAPE_SCORE,
-	PAR_A_ANCHOR,
-	PAR_LV_ANCHOR
-};
-
-static const char *short_option = "k:p:u:f:l:r:i:s:n:o:x:a:c:g:e:v:";
-static struct option long_option[] = {
-	{(char*)"local", no_argument,  0, PAR_LOCAL_KSW},
-	{(char*)"cl", required_argument, 0, PAR_LAST_CIRCLE},
-	{(char*)"mg", no_argument, 0, PAR_MULTI_GENOMES},
-	{(char*)"local-match", required_argument, 0, PAR_MAT_SCORE},
-	{(char*)"local-mismatch", required_argument, 0, PAR_MIS_SCORE},
-	{(char*)"local-gap-open", required_argument, 0, PAR_GAPO_SCORE},
-	{(char*)"local-gap-extension", required_argument, 0, PAR_GAPE_SCORE},
-	{(char*)"aanchor", required_argument, 0, PAR_A_ANCHOR},
-	{(char*)"vanchor", required_argument, 0, PAR_LV_ANCHOR},
-	{(char*)0, 0, 0, 0}
-};
-
 int load_input_map(int argc, char *argv[])
 {
-	
 	int c = 0;
 	while((c = getopt_long(argc, argv, short_option, long_option, NULL)) != -1){
 		switch (c) {
@@ -375,6 +435,7 @@ int load_input_map(int argc, char *argv[])
 			case PAR_MIS_SCORE: mis_score = atoi(optarg); break;
 			case PAR_GAPO_SCORE: gapo_score = atoi(optarg); break;
 			case PAR_GAPE_SCORE: gape_score = atoi(optarg); break;
+			case PAR_HELP: return load_input_usage();
 			default: return load_input_usage();
 		} 
 	}   
@@ -481,11 +542,11 @@ int load_input_map(int argc, char *argv[])
 	memset(uniposp, 0, ROUTE_LENGTH_MAX);
 	strcpy(uniposp, index_route);
 	strcat(uniposp, uniposps);
-	
+	/*
 	memset(unista, 0, ROUTE_LENGTH_MAX);
 	strcpy(unista, index_route);
 	strcat(unista, unistas);
-	
+	*/
 	memset(unihash_g, 0, ROUTE_LENGTH_MAX);
 	strcpy(unihash_g, index_route);
 	strcat(unihash_g, unihash_gs);
@@ -547,6 +608,7 @@ void load_index_file()
 	uint64_t off_n = 0;
 	uint64_t pu_n = 0;
 	uint64_t ref_seq_n = 0;
+	uint64_t file_size = 0;
 	
 	//read index file size
 	fp_num = fopen(unisize, "rb");
@@ -570,12 +632,21 @@ void load_index_file()
 	
 	//read ref seq file
 	printf("Load ref seq\n");
+	
 	fp_ref_seq = fopen(ref_seq, "rb");
 	if (fp_ref_seq == NULL)
     {
         fputs ("File error opening the  seq file\n",stderr);
         exit (1);
     }
+	
+	fseek(fp_ref_seq, 0, SEEK_END);// non-portable
+    file_size = ftell(fp_ref_seq);
+	rewind(fp_ref_seq);
+	
+	//printf("ref seq: %"PRId64" %u\n", file_size, ftell(fp_ref_seq));
+	
+	ref_seq_n = file_size;
 	buffer_ref_seq = (uint64_t* )calloc(ref_seq_n + 536, 1);//536 = (2048 >> 5 + 3) << 3
 	
 	a_size = ref_seq_n >> 3;
@@ -599,6 +670,16 @@ void load_index_file()
         exit (1);
     }
 
+	fseek(fp_us_b, 0, SEEK_END);// non-portable
+    file_size = ftell(fp_us_b);
+	rewind(fp_us_b);
+	
+	//printf("unipath seq: %"PRId64" %u\n", file_size, ftell(fp_us_b));
+	
+	//if(file_size != us_n)	printf("uniseq_b real size different with its size %"PRId64" %"PRId64"\n", file_size, us_n);
+	
+	us_n = file_size;
+	
     // allocate memory to contain the whole file:
 #ifdef UNI_SEQ64
 	buffer_seq = (uint64_t* ) malloc (us_n);
@@ -607,18 +688,18 @@ void load_index_file()
 #endif
     if (buffer_seq == NULL)
     {
-        fputs ("Memory error",stderr);
+        fputs ("Memory error buffer_seq\n",stderr);
         exit (2);
     }
 
     // copy the file into the buffer:
 	
 #ifdef UNI_SEQ64	
-	result_seq = fread (buffer_seq,8,us_n,fp_us_b);
 	a_size = us_n >> 3;
+	result_seq = fread (buffer_seq, 8, a_size, fp_us_b);
 #else	
-    result_seq = fread (buffer_seq,1,us_n,fp_us_b);
 	a_size = us_n;
+    result_seq = fread (buffer_seq, 1, a_size, fp_us_b);
 #endif
 
     if (result_seq != a_size)
@@ -639,26 +720,35 @@ void load_index_file()
         exit (1);
     }
 
-    // allocate memory to contain the whole file:
+	fseek(fp_usf_b, 0, SEEK_END);// non-portable
+    file_size = ftell(fp_usf_b);
+	rewind(fp_usf_b);
 	
+	//printf("unipath offset: %"PRId64" %u\n", file_size, ftell(fp_usf_b));
+	
+	//if(file_size != usf_n)	printf("uniseqf_b real size different with its size \n");
+	
+	usf_n = file_size;
+	
+    // allocate memory to contain the whole file:
+	// copy the file into the buffer:
 #ifdef UNPIPATH_OFF_K20
 	buffer_seqf = (uint64_t* ) malloc (usf_n);
-#else	
-    buffer_seqf = (uint32_t* ) malloc (usf_n);
-#endif
-	
-    if (buffer_seqf == NULL)
+	if (buffer_seqf == NULL)
     {
-        fputs ("Memory error",stderr);
+        fputs ("Memory error buffer_seqf",stderr);
         exit (2);
     }
-
-    // copy the file into the buffer:
-#ifdef UNPIPATH_OFF_K20
 	a_size = (usf_n >> 3);
     result_seqf = fread (buffer_seqf, 8, a_size, fp_usf_b);
-#else
-    a_size = (usf_n >> 2);
+#else	
+    buffer_seqf = (uint32_t* ) malloc (usf_n);
+	if (buffer_seqf == NULL)
+    {
+        fputs ("Memory error buffer_seqf",stderr);
+        exit (2);
+    }
+	a_size = (usf_n >> 2);
     result_seqf = fread (buffer_seqf, 4, a_size, fp_usf_b);
 #endif	
 	
@@ -670,6 +760,7 @@ void load_index_file()
 
     fclose(fp_usf_b);
 
+	/*
     //read input unipath edge file
     printf("Load unipath edge\n");
 
@@ -697,7 +788,8 @@ void load_index_file()
     }
 	
     fclose(fp_ue);
-
+	*/
+		
     //read input unipath position file
     printf("Load unipath position\n");
 
@@ -708,18 +800,38 @@ void load_index_file()
         exit (1);
     }
 
+	fseek(fp_up, 0, SEEK_END);// non-portable
+    file_size = ftell(fp_up);
+	rewind(fp_up);
+	
+	//printf("unipath position: %"PRId64" %u\n", file_size, ftell(fp_up));
+	
+	//if(file_size != up_n)	printf("unipos real size different with its size \n");
+	up_n = file_size;
+	
     // allocate memory to contain the whole file:
-    a_size = (up_n >> 2);
-    buffer_p = (uint32_t* ) malloc (up_n);
+
+	// copy the file into the buffer:
+#ifdef	UNPIPATH_OFF_K20
+	buffer_p = (uint64_t* ) malloc (up_n);
     if (buffer_p == NULL)
     {
-        fputs ("Memory error",stderr);
+        fputs ("Memory error buffer_p",stderr);
         exit (2);
     }
-
-    // copy the file into the buffer:
-    result_p = fread (buffer_p, 4, a_size, fp_up);
-
+	a_size = (up_n >> 3);
+	result_p = fread (buffer_p, 8, a_size, fp_up);
+#else
+	buffer_p = (uint32_t* ) malloc (up_n);
+    if (buffer_p == NULL)
+    {
+        fputs ("Memory error buffer_p",stderr);
+        exit (2);
+    }
+	a_size = (up_n >> 2);
+	result_p = fread (buffer_p, 4, a_size, fp_up);
+#endif
+    
     if (result_p != a_size)
     {
         fputs ("Reading error",stderr);
@@ -737,24 +849,44 @@ void load_index_file()
         fputs ("File error opening the unipath position point file\n",stderr);
         exit (1);
     }
-
+	
+	fseek(fp_upp, 0, SEEK_END);// non-portable
+    file_size = ftell(fp_upp);
+	rewind(fp_upp);
+	
+	//printf("unipath position point: %"PRId64" %u\n", file_size, ftell(fp_upp));
+	
+	//if(file_size != upp_n)	printf("uniposp real size different with its size \n");
+	upp_n = file_size;
+	
+#ifdef	UNPIPATH_OFF_K20
+	// allocate memory to contain the whole file:
+    a_size = (upp_n >> 3);
+    buffer_pp = (uint64_t* ) malloc (upp_n);
+    if (buffer_pp == NULL)
+    {
+        fputs ("Memory error buffer_pp",stderr);
+        exit (2);
+    }
+    // copy the file into the buffer:
+    result_pp = fread (buffer_pp, 8, a_size, fp_upp);
+#else
     // allocate memory to contain the whole file:
     a_size = (upp_n >> 2);
     buffer_pp = (uint32_t* ) malloc (upp_n);
     if (buffer_pp == NULL)
     {
-        fputs ("Memory error",stderr);
+        fputs ("Memory error buffer_pp",stderr);
         exit (2);
     }
-
     // copy the file into the buffer:
     result_pp = fread (buffer_pp, 4, a_size, fp_upp);
-    if (result_pp != a_size)
+#endif
+	if (result_pp != a_size)
     {
         fputs ("Reading error",stderr);
         exit (3);
     }
-
     fclose(fp_upp);
 	
     //read input unipath hash file
@@ -766,22 +898,49 @@ void load_index_file()
         fputs ("File error opening the graph hash file\n",stderr);
         exit (1);
     }
+	
+	fseek(fp_hash, 0, SEEK_END);// non-portable
+    file_size = ftell(fp_hash);
+	rewind(fp_hash);
+	
+	//printf("unipath hash: %"PRId64" %u\n", file_size, ftell(fp_hash));
+	
+	//if(file_size != hash_n)	printf("unihash_g real size different with its size \n");
+	hash_n = file_size;
+	
+#ifdef	UNPIPATH_OFF_K20
+	a_size = (hash_n >> 3);
+    buffer_hash_g = (uint64_t* ) malloc (hash_n);
+    if (buffer_hash_g == NULL)
+    {
+        fputs("Memory error",stderr);
+        exit(2);
+    }
 
+    // copy the file into the buffer:
+    result_hash_g = fread (buffer_hash_g, 8, a_size, fp_hash);
+    if (result_hash_g != a_size)
+    {
+        fputs("Reading error",stderr);
+        exit(3);
+    }
+#else
     a_size = (hash_n >> 2);
     buffer_hash_g = (uint32_t* ) malloc (hash_n);
     if (buffer_hash_g == NULL)
     {
-        fputs ("Memory error",stderr);
-        exit (2);
+        fputs("Memory error",stderr);
+        exit(2);
     }
 
     // copy the file into the buffer:
     result_hash_g = fread (buffer_hash_g, 4, a_size, fp_hash);
     if (result_hash_g != a_size)
     {
-        fputs ("Reading error",stderr);
-        exit (3);
+        fputs("Reading error",stderr);
+        exit(3);
     }
+#endif
 	//printf("number of unipath hash is %u\n", result_hash_g);
 	
     fclose(fp_hash);
@@ -796,6 +955,15 @@ void load_index_file()
         exit (1);
     }
 	
+	fseek(fp_kmer, 0, SEEK_END);// non-portable
+    file_size = ftell(fp_kmer);
+	rewind(fp_kmer);
+	
+	//printf("unipath kmer: %"PRId64" %u\n", file_size, ftell(fp_kmer));
+	
+	//if(file_size != kmer_n)	printf("unikmer_g real size different with its size \n");
+	kmer_n = file_size;
+	
     a_size = (kmer_n >> 2);
     
     //a_size = kmer_num;
@@ -803,7 +971,7 @@ void load_index_file()
     buffer_kmer_g = (uint32_t* ) malloc (kmer_n);
     if (buffer_kmer_g == NULL)
     {
-        fputs ("Memory error",stderr);
+        fputs ("Memory error buffer_kmer_g",stderr);
         exit (2);
     }
 
@@ -811,7 +979,7 @@ void load_index_file()
     result_kmer_g = fread (buffer_kmer_g, 4, a_size, fp_kmer);
     if (result_kmer_g != a_size)
     {
-        fputs ("Reading error",stderr);
+        fputs ("Reading error buffer_kmer_g",stderr);
         exit (3);
     }
 
@@ -826,30 +994,37 @@ void load_index_file()
         fputs ("File error opening the graph hash file\n",stderr);
         exit (1);
     }
-
-    
+	
+	fseek(fp_off, 0, SEEK_END);// non-portable
+    file_size = ftell(fp_off);
+	rewind(fp_off);
+	
+	//printf("unipath off: %"PRId64" %u\n", file_size, ftell(fp_off));
+	
+	//if(file_size != off_n)	printf("unioff_g real size different with its size \n");
+	off_n = file_size;
+	
+    // copy the file into the buffer:
 #ifdef UNPIPATH_OFF_K20
 	buffer_off_g = (uint64_t* ) malloc (off_n);
-#else	
-    buffer_off_g = (uint32_t* ) malloc (off_n);
-#endif	
-	
-    if (buffer_off_g == NULL)
+	if (buffer_off_g == NULL)
     {
         fputs ("Memory error",stderr);
         exit (2);
     }
-
-    // copy the file into the buffer:
-	
-#ifdef UNPIPATH_OFF_K20
 	a_size = (off_n >> 3);
     result_off_g = fread (buffer_off_g, 8, a_size, fp_off);
 #else	
+    buffer_off_g = (uint32_t* ) malloc (off_n);
+	if (buffer_off_g == NULL)
+    {
+        fputs ("Memory error",stderr);
+        exit (2);
+    }
 	a_size = (off_n >> 2);
     result_off_g = fread (buffer_off_g, 4, a_size, fp_off);
 #endif	
-	
+
     if (result_off_g != a_size)
     {
         fputs ("Reading error",stderr);
@@ -865,26 +1040,37 @@ void load_index_file()
         exit (1);
     }
 	
-	uint16_t chr_line_n = 0;
+	uint32_t chr_line_n = 0;
     while(!feof(fp_chr))
     {
 		fscanf(fp_chr, "%s", chr_line_content);
+		//fgets(chr_line_content, MAX_CHR_NAME_LENGTH, fp_chr);
 
 		if((chr_line_n & 0X1) == 0)
 		{
 			strcpy(chr_names[chr_file_n], chr_line_content);
 			chr_names[chr_file_n][strlen(chr_names[chr_file_n])] = '\0';
+
 		}else{
+#ifdef UNPIPATH_OFF_K20
+			sscanf(chr_line_content, "%"PRId64"", &chr_end_n[chr_file_n]);
+#else
 			sscanf(chr_line_content, "%u", &chr_end_n[chr_file_n]);
+#endif
 			chr_file_n++;
 		}	
-
+		
+		fflush(stdout);
+		
 		chr_line_n++;
     }
 
 	chr_end_n[0] = START_POS_REF + 1;
 
 	strcpy(chr_names[chr_file_n], "*");
+	
+	//printf("chr_file_n: %u %s\n", chr_file_n, chr_names[chr_file_n]);
+	
 }
 
 

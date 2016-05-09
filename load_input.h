@@ -8,13 +8,17 @@
 #include <zlib.h>
 #include "kseq.h"
 
-//#define UNPIPATH_OFF_K20
+#define	CHR_NAME_SPLIT
+#define	HANDLE_DIR
+
+#define UNPIPATH_OFF_K20
+
 #define	UNI_SEQ64
 #define PACKAGE_VERSION "0.1"
 
 #define ROUTE_LENGTH_MAX   500
 
-#define	MAX_CHR_NUM 500
+#define	MAX_CHR_NUM 600000
 #define	MAX_CHR_NAME_LENGTH	200
 
 #define	START_POS_REF	2048
@@ -35,17 +39,21 @@ extern uint8_t* buffer_seq;
 #ifdef UNPIPATH_OFF_K20
 extern uint64_t* buffer_seqf;
 extern uint64_t* buffer_off_g;
+extern uint64_t* buffer_p;
+extern uint64_t* buffer_pp;
+extern uint64_t* buffer_hash_g;
 #else
 extern uint32_t* buffer_seqf;
 extern uint32_t* buffer_off_g;
+extern uint32_t* buffer_p;
+extern uint32_t* buffer_pp;
+extern uint32_t* buffer_hash_g;
 #endif
 
 extern uint8_t* buffer_edge;
-extern uint32_t* buffer_p;
-extern uint32_t* buffer_pp;
 extern uint32_t* buffer_pupos;
 extern uint32_t* buffer_puid;
-extern uint32_t* buffer_hash_g;
+
 extern uint32_t* buffer_kmer_g;
 	
 extern uint64_t result_ref_seq;
@@ -79,6 +87,7 @@ extern const char* divs;
 extern const char* f_size;
 extern const char* sys_c_mkdir;
 extern const char* sys_c_rm;
+extern const char* sys_rm;
 
 extern char sam_result[ROUTE_LENGTH_MAX];
 extern char read_fastq1[ROUTE_LENGTH_MAX];
@@ -95,7 +104,7 @@ extern char uniedge[ROUTE_LENGTH_MAX];
 extern char unipu[ROUTE_LENGTH_MAX];
 extern char unipos[ROUTE_LENGTH_MAX];
 extern char uniposp[ROUTE_LENGTH_MAX];
-extern char unista[ROUTE_LENGTH_MAX];
+//extern char unista[ROUTE_LENGTH_MAX];
 extern char unihash_g[ROUTE_LENGTH_MAX];
 extern char unikmer_g[ROUTE_LENGTH_MAX];
 extern char unioff_g[ROUTE_LENGTH_MAX];
@@ -129,8 +138,15 @@ extern FILE* unipath_debug;
 extern const uint8_t f;
 extern const uint8_t k;
 extern uint8_t k_t;	
-extern uint32_t first_cnt_cl;
+
+#ifdef	UNPIPATH_OFF_K20
+extern uint64_t chr_end_n[MAX_CHR_NUM];
+extern uint64_t first_cnt_cl;
+#else
 extern uint32_t chr_end_n[MAX_CHR_NUM];
+extern uint32_t first_cnt_cl;
+#endif
+
 extern uint32_t chr_file_n;
 extern uint8_t thread_n;
 extern uint32_t upper_ins;
@@ -173,5 +189,7 @@ int load_input_index(int , char * []);
 int load_input_map(int , char * []);
 int load_input_map_single_end(int , char * []);
 void load_index_file();
+int seed_ali();
+int seed_ali_single_end();
 
 #endif /* LOAD_INPUT_H_ */

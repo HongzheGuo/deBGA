@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+
 extern char ksw_cigars[4];
 extern uint16_t carry_ten[4];
 extern uint32_t anchor_mask_boundary[11];
@@ -62,23 +63,23 @@ extern float mp_sub_bp[];
 #define kmer_bit32(s, k, kmer_i, kmer_int)\
 	kmer_int = 0;\
 	for(kmer_i = 0; kmer_i < k; kmer_i++)\
-		(kmer_int) |= (charToDna5[(uint8_t)s[k - 1 - kmer_i]] << (kmer_i << 1));
+		(kmer_int) |= (((uint32_t )charToDna5[(uint8_t)s[k - 1 - kmer_i]]) << (kmer_i << 1));
 
 //copy the characters from index to end to 32-bit (right-alignment)
 #define kmer_bit32_index(s, k, kmer_i, kmer_int, index)\
     kmer_int = 0;\
 	for(kmer_i = 0; kmer_i < k - index; kmer_i++)\
-		(kmer_int) |= (charToDna5[(uint8_t)s[k - 1 - kmer_i]] << (kmer_i << 1));
+		(kmer_int) |= (((uint32_t )charToDna5[(uint8_t)s[k - 1 - kmer_i]]) << (kmer_i << 1));
 
 //kmer_i runs from right to left
 //copy the characters from index to end to 32-bit[a] (right-alignment), k is the number
 
 //kmer_bit32a(kmer_s, k_t - f, kmer_i, write_buff, 3)
-
+//a << 2
 #define kmer_bit32a(s, k, kmer_i, kmer_int, a)\
-    memset(kmer_int, 0, a << 2);\
+    memset(kmer_int, 0, 12);\
 	for(kmer_i = 0; kmer_i < k; kmer_i++)\
-		(kmer_int[a - 1 - (kmer_i >> 4)]) |= (charToDna5[(uint8_t)s[k - 1 - kmer_i]] << ((kmer_i & 0Xf) << 1));
+		(kmer_int[a - 1 - (kmer_i >> 4)]) |= (((uint32_t )charToDna5[(uint8_t)s[k - 1 - kmer_i]]) << ((kmer_i & 0Xf) << 1));
 
 
 #define kmer_bit64(uint64, k, kmer_i, kmer)\

@@ -5,7 +5,11 @@
 #include "seed_ali_p.h"
 
 //binary search offset
+#ifdef UNPIPATH_OFF_K20
+int64_t binsearch_offset64(uint32_t x, uint32_t v[], int64_t n, uint64_t offset)
+#else
 int64_t binsearch_offset(uint32_t x, uint32_t v[], int64_t n, uint32_t offset)
+#endif
 {
     int64_t low, high, mid;
 
@@ -113,7 +117,11 @@ int64_t binsearch_seed_pos_s(uint32_t x, uint32_t* bp, int64_t n)
     return -1;
 }
 
+#ifdef UNPIPATH_OFF_K20
+int64_t binsearch_seed_pos_ss64(uint64_t x, uint64_t* bp, int64_t n)
+#else
 int64_t binsearch_seed_pos_ss(uint32_t x, uint32_t* bp, int64_t n)
+#endif
 {
     int64_t low, high, mid;
 
@@ -167,7 +175,11 @@ int64_t binsearch_seed_pos_offset(uint32_t x, uint32_t* bp, int64_t n, uint32_t 
     return -1;
 }
 
+#ifdef UNPIPATH_OFF_K20
+int64_t binsearch_pair_pos_reduce64(uint64_t x, uint64_t* bp, int64_t n, int64_t offset, uint8_t tid)
+#else
 int64_t binsearch_pair_pos_reduce(uint32_t x, uint32_t* bp, int64_t n, uint32_t offset, uint8_t tid)
+#endif
 {
     int64_t low, high, mid;
 	
@@ -223,6 +235,35 @@ int64_t binsearch_seed_set_offset(uint32_t x, seed_sets* seedsets, int64_t n, ui
     return -1;
 }
 
+int64_t binsearch_seed_set_reduce64(uint64_t x, seed_sets* seedsets, int64_t n, uint64_t offset, uint8_t tid)
+{
+    int64_t low, high, mid;
+
+    low = 0;
+    high = n - 1;
+
+    while ( low <= high )
+    {
+        mid = (low + high) >> 1;
+        if(x < (seedsets[mid + offset].seed_set - uni_d))//
+        {
+            high = mid - 1;
+        }
+        else if(x > (seedsets[mid + offset].seed_set + uni_d))//
+        {
+            low = mid + 1;
+        }
+        else  /*found match*/
+        {
+            return mid + offset;
+        }
+    }
+	
+	g_low[tid] = low;
+	
+    return -1;
+}
+
 int64_t binsearch_seed_set_reduce(uint32_t x, seed_sets* seedsets, int64_t n, uint32_t offset, uint8_t tid)
 {
     int64_t low, high, mid;
@@ -247,6 +288,36 @@ int64_t binsearch_seed_set_reduce(uint32_t x, seed_sets* seedsets, int64_t n, ui
         }
     }
 	
+	g_low[tid] = low;
+	
+    return -1;
+}
+
+int64_t binsearch_seed_pos_reduce64(uint64_t x, uint64_t* pos, int64_t n, uint64_t offset, uint8_t tid)
+{
+    int64_t low, high, mid;
+
+    low = 0;
+    high = n - 1;
+
+    while ( low <= high )
+    {
+        mid = (low + high) >> 1;
+        if(x < (pos[mid + offset] - uni_d))
+        {
+            high = mid - 1;
+        }
+        else if(x > (pos[mid + offset] + uni_d))
+        {
+            low = mid + 1;
+        }
+        else  /*found match*/
+        {
+            return mid + offset;
+        }
+    }
+	
+	//g_high = high;
 	g_low[tid] = low;
 	
     return -1;
