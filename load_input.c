@@ -149,6 +149,7 @@ float max_pair_score_r = 0.05;//0.06 0.2
 float mis_match_r_single = 0.05;//0.04 0.4
 float lv_rate_anchor = 0.05;
 
+uint8_t flag_std = 0;
 uint8_t local_ksw = 0;
 uint8_t mgn_flag = 1;
 
@@ -192,6 +193,7 @@ static int load_input_usage()
 	fprintf(stderr, "	--local-mismatch NUM the penalty for a mismatched base in the local alignment [%d]\n", mis_score);
 	fprintf(stderr, "	--local-gap-open NUM the penalty for a gap open in the local alignment [%d]\n", gapo_score);
 	fprintf(stderr, "	--local-gap-extension NUM the penalty for gap extension in the local alignment [%d]\n", gape_score);
+	fprintf(stderr, "	--stdout   (default: not set) output alignments by stdout\n");
 	fprintf(stderr, "	-u INT	the upper limit of insert size (only for pair-end reads) [%u] \n", upper_ins);
 	fprintf(stderr, "	-f INT	the lower limit of insert size (only for pair-end reads) [%u] \n", floor_ins);
 	fprintf(stderr, "	-o INT	the maximum number of alignment output [%u]\n", cus_ali_n);
@@ -200,11 +202,7 @@ static int load_input_usage()
 	fprintf(stderr, "	-e INT	the budget for single-end alignment [%u]\n", seed_filter_pos_numn);
 	fprintf(stderr, "	-p INT	the number of threads [%u]\n", thread_n);
 	//fprintf(stderr, "	--mg 	use the mode of multi-genomes\n");
-	//fprintf(stderr, "	-v NUM	the max editing distance rate for LandauVishkin [%.2f] (only for pair-end)\n", lv_rate);
-	//fprintf(stderr, "	-r INT	seed coverage length filter [%u]\n", length_reduce);
-	//fprintf(stderr, "	--aanchor NUM	the max rate of mismatch alignment on anchor [%.2f]\n", mis_match_r_single);
-	//fprintf(stderr, "	--vanchor NUM	the max editing distance rate for LandauVishkin on anchor [%.2f]\n", lv_rate_anchor);
-	
+
 	fprintf(stderr, "	Please refer to the following link for more detailed information about the options: https://github.com/HIT-Bioinformatics/deBGA\n");
 	fprintf(stderr, "\n");
 
@@ -215,8 +213,6 @@ int help_usage()
 {
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Program:	deBGA (De bruijn graph nucleotide alignment)\n");
-	//fprintf(stderr, "Version:	%s\n", COMMAND_VERSION);
-	//fprintf(stderr, "Contact:	Hongzhe Guo <hzguo@hit.edu.cn>\n\n");
 	fprintf(stderr, "Usage:  	deBGA <command> [options]\n\n");
 	fprintf(stderr, "Command:	index		index sequences in the FASTA format\n");
 	fprintf(stderr, "		aln      	pair-end and single-end reads seed reduction and alignment based on De bruijn graph\n");
@@ -236,6 +232,7 @@ int help_usage()
 	fprintf(stderr, "	--local-mismatch NUM the penalty for a mismatched base in the local alignment [%d]\n", mis_score);
 	fprintf(stderr, "	--local-gap-open NUM the penalty for a gap open in the local alignment [%d]\n", gapo_score);
 	fprintf(stderr, "	--local-gap-extension NUM the penalty for gap extension in the local alignment [%d]\n", gape_score);
+	fprintf(stderr, "	--stdout   (default: not set) output alignments by stdout\n");
 	fprintf(stderr, "	-u INT	the upper limit of insert size (only for pair-end reads) [%u] \n", upper_ins);
 	fprintf(stderr, "	-f INT	the lower limit of insert size (only for pair-end reads) [%u] \n", floor_ins);
 	fprintf(stderr, "	-o INT	the maximum number of alignment output [%u]\n", cus_ali_n);
@@ -244,11 +241,7 @@ int help_usage()
 	fprintf(stderr, "	-e INT	the budget for single-end alignment [%u]\n", seed_filter_pos_numn);
 	fprintf(stderr, "	-p INT	the number of threads [%u]\n", thread_n);
 	//fprintf(stderr, "	--mg 	use the mode of multi-genomes\n");
-	//fprintf(stderr, "	-v NUM	the max editing distance rate for LandauVishkin [%.2f] (only for pair-end)\n", lv_rate);
-	//fprintf(stderr, "	-r INT	seed coverage length filter [%u]\n", length_reduce);
-	//fprintf(stderr, "	--aanchor NUM	the max rate of mismatch alignment on anchor [%.2f]\n", mis_match_r_single);
-	//fprintf(stderr, "	--vanchor NUM	the max editing distance rate for LandauVishkin on anchor [%.2f]\n", lv_rate_anchor);
-	
+
 	fprintf(stderr, "	Please refer to the following link for more detailed information about the options: https://github.com/HIT-Bioinformatics/deBGA\n");
 	fprintf(stderr, "\n");
 
@@ -266,7 +259,8 @@ enum {
 	PAR_GAPE_SCORE,
 	PAR_A_ANCHOR,
 	PAR_LV_ANCHOR,
-	PAR_HELP
+	PAR_HELP,
+	PAR_STD_OUT
 };
 
 static const char *short_option = "k:p:u:f:l:r:i:s:n:o:x:a:c:g:e:v:";
@@ -280,7 +274,8 @@ static struct option long_option[] = {
 	{(char*)"local-gap-extension", required_argument, 0, PAR_GAPE_SCORE},
 	{(char*)"aanchor", required_argument, 0, PAR_A_ANCHOR},
 	{(char*)"vanchor", required_argument, 0, PAR_LV_ANCHOR},
-	{(char*)"help", required_argument, 0, PAR_HELP},
+	{(char*)"help", no_argument, 0, PAR_HELP},
+	{(char*)"stdout", no_argument, 0, PAR_STD_OUT},
 	{(char*)0, 0, 0, 0}
 };
 
@@ -435,6 +430,7 @@ int load_input_map(int argc, char *argv[])
 			case PAR_MIS_SCORE: mis_score = atoi(optarg); break;
 			case PAR_GAPO_SCORE: gapo_score = atoi(optarg); break;
 			case PAR_GAPE_SCORE: gape_score = atoi(optarg); break;
+			case PAR_STD_OUT: flag_std = 1; break;
 			case PAR_HELP: return load_input_usage();
 			default: return load_input_usage();
 		} 
@@ -443,67 +439,67 @@ int load_input_map(int argc, char *argv[])
 	if (argc - optind < 3) return load_input_usage();
 	if((k_t < 21) || (k_t > 28))
 	{
-		printf("Input error: -k cannot be less than 21 or more than 28\n");
+		fprintf(stderr, "Input error: -k cannot be less than 21 or more than 28\n");
 		exit(1);
 	}
 	if((thread_n < 1) || (thread_n > 32))
 	{
-		printf("Input error: -p cannot be less than 1 or more than 32\n");
+		fprintf(stderr, "Input error: -p cannot be less than 1 or more than 32\n");
 		exit(1);
 	}
 	if(upper_ins <= floor_ins)
 	{
-		printf("Input error: -u should be more than floor limit\n");
+		fprintf(stderr, "Input error: -u should be more than floor limit\n");
 		exit(1);
 	}
 	if(readlen_max > 2048)
 	{
-		printf("Input error: -l cannot be more than 2048\n");
+		fprintf(stderr, "Input error: -l cannot be more than 2048\n");
 		exit(1);
 	}
 	if(length_reduce > 50)
 	{
-		printf("Input error: -r cannot be more than 50\n");
+		fprintf(stderr, "Input error: -r cannot be more than 50\n");
 		exit(1);
 	}
 	if((seed_step < 1) || (seed_step > 20))//5 20
 	{
-		printf("Input error: -i cannot be more than 20 or less than 5\n");
+		fprintf(stderr, "Input error: -i cannot be more than 20 or less than 5\n");
 		exit(1);
 	}
 	if(cir_fix_n > 10)
 	{
-		printf("Input error: -s cannot be more than 10\n");
+		fprintf(stderr, "Input error: -s cannot be more than 10\n");
 		exit(1);
 	}
 	if(cus_ali_n > 1000)//300
 	{
-		printf("Input error: -o cannot be more than 1000\n");//300
+		fprintf(stderr, "Input error: -o cannot be more than 1000\n");//300
 		exit(1);
 	}
 	if(cus_max_output_ali > 1000)//500
 	{
-		printf("Input error: -x cannot be more than 1000\n");//500
+		fprintf(stderr, "Input error: -x cannot be more than 1000\n");//500
 		exit(1);
 	}
 	if(max_pair_score_r > 0.35)//0.5
 	{
-		printf("Input error: -c cannot be more than 0.5\n");
+		fprintf(stderr, "Input error: -c cannot be more than 0.5\n");
 		exit(1);
 	}
 	if(seed_filter_pos_numn > 2000)
 	{
-		printf("Input error: -e cannot be more than 2000\n");
+		fprintf(stderr, "Input error: -e cannot be more than 2000\n");
 		exit(1);
 	}
 	if(lv_rate > 0.5)
 	{
-		printf("Input error: -v cannot be more than 0.5\n");
+		fprintf(stderr, "Input error: -v cannot be more than 0.5\n");
 		exit(1);
 	}
 	if(last_circle_rate > 0.5)
 	{
-		printf("Input error: --cl cannot be more than 0.5\n");
+		fprintf(stderr, "Input error: --cl cannot be more than 0.5\n");
 		exit(1);
 	}
 	
@@ -579,16 +575,23 @@ int load_input_map(int argc, char *argv[])
 	strcpy(unisize, index_route);
 	strcat(unisize, f_size);
 	
-	if (argc - optind < 4)
+	if ((argc - optind < 4) && (flag_std == 0))
 	{
 		max_single_score_r = max_pair_score_r;
 		seed_filter_pos_num_singlen = seed_filter_pos_numn;
+
+		if(strcmp(argv[optind + 2] + strlen(argv[optind + 2]) - 3, ".fq") || strcmp(argv[optind + 2] + strlen(argv[optind + 2]) - 6, ".fastq"))
+		{
+			fprintf(stderr, "result file cannot be .fq or .fastq\n");
+			exit(1);
+		}
 		strcpy(sam_result, argv[optind + 2]);
 		seed_ali_single_end();
 	}else{
 		memset(read_fastq2, 0, ROUTE_LENGTH_MAX);
 		strcpy(read_fastq2, argv[optind + 2]);
-		strcpy(sam_result, argv[optind + 3]);
+		if(flag_std == 0)
+			strcpy(sam_result, argv[optind + 3]);
 		seed_ali();
 	}	
 
@@ -631,7 +634,7 @@ void load_index_file()
 	fclose(fp_num);
 	
 	//read ref seq file
-	printf("Load ref seq\n");
+	fprintf(stderr, "Load ref seq\n");
 	
 	fp_ref_seq = fopen(ref_seq, "rb");
 	if (fp_ref_seq == NULL)
@@ -643,9 +646,7 @@ void load_index_file()
 	fseek(fp_ref_seq, 0, SEEK_END);// non-portable
     file_size = ftell(fp_ref_seq);
 	rewind(fp_ref_seq);
-	
-	//printf("ref seq: %"PRId64" %u\n", file_size, ftell(fp_ref_seq));
-	
+
 	ref_seq_n = file_size;
 	buffer_ref_seq = (uint64_t* )calloc(ref_seq_n + 536, 1);//536 = (2048 >> 5 + 3) << 3
 	
@@ -654,30 +655,26 @@ void load_index_file()
 	
 	if (result_ref_seq != a_size)
     {
-        fputs ("Reading error",stderr);
+        fprintf(stderr, "Reading error");
         exit (3);
     }
 
     fclose(fp_ref_seq);
 
     //read input unipath seq file
-    printf("Load unipath seq\n");
+    fprintf(stderr, "Load unipath seq\n");
 
     fp_us_b = fopen (uniseq_b, "rb" );
     if (fp_us_b == NULL)
     {
-        fputs ("File error opening the unipath seq file\n",stderr);
+        fprintf(stderr, "File error opening the unipath seq file\n");
         exit (1);
     }
 
 	fseek(fp_us_b, 0, SEEK_END);// non-portable
     file_size = ftell(fp_us_b);
 	rewind(fp_us_b);
-	
-	//printf("unipath seq: %"PRId64" %u\n", file_size, ftell(fp_us_b));
-	
-	//if(file_size != us_n)	printf("uniseq_b real size different with its size %"PRId64" %"PRId64"\n", file_size, us_n);
-	
+
 	us_n = file_size;
 	
     // allocate memory to contain the whole file:
@@ -711,7 +708,7 @@ void load_index_file()
     fclose(fp_us_b);
 
     //read input unipath offset file
-    printf("Load unipath offset\n");
+    fprintf(stderr, "Load unipath offset\n");
 
     fp_usf_b = fopen(uniseqf_b, "rb");
     if(fp_usf_b == NULL)
@@ -723,11 +720,7 @@ void load_index_file()
 	fseek(fp_usf_b, 0, SEEK_END);// non-portable
     file_size = ftell(fp_usf_b);
 	rewind(fp_usf_b);
-	
-	//printf("unipath offset: %"PRId64" %u\n", file_size, ftell(fp_usf_b));
-	
-	//if(file_size != usf_n)	printf("uniseqf_b real size different with its size \n");
-	
+
 	usf_n = file_size;
 	
     // allocate memory to contain the whole file:
@@ -736,7 +729,7 @@ void load_index_file()
 	buffer_seqf = (uint64_t* ) malloc (usf_n);
 	if (buffer_seqf == NULL)
     {
-        fputs ("Memory error buffer_seqf",stderr);
+        fprintf(stderr, "Memory error buffer_seqf");
         exit (2);
     }
 	a_size = (usf_n >> 3);
@@ -791,12 +784,12 @@ void load_index_file()
 	*/
 		
     //read input unipath position file
-    printf("Load unipath position\n");
+    fprintf(stderr, "Load unipath position\n");
 
     fp_up = fopen(unipos, "rb");
     if(fp_up == NULL)
     {
-        fputs ("File error opening the unipath position file\n",stderr);
+        fprintf(stderr, "File error opening the unipath position file\n");
         exit (1);
     }
 
@@ -804,9 +797,6 @@ void load_index_file()
     file_size = ftell(fp_up);
 	rewind(fp_up);
 	
-	//printf("unipath position: %"PRId64" %u\n", file_size, ftell(fp_up));
-	
-	//if(file_size != up_n)	printf("unipos real size different with its size \n");
 	up_n = file_size;
 	
     // allocate memory to contain the whole file:
@@ -841,7 +831,7 @@ void load_index_file()
     fclose(fp_up);
 
     //read input unipath position point file
-    printf("Load unipath position point\n");
+    fprintf(stderr, "Load unipath position point\n");
 
     fp_upp = fopen(uniposp, "rb");
     if(fp_upp == NULL)
@@ -853,10 +843,7 @@ void load_index_file()
 	fseek(fp_upp, 0, SEEK_END);// non-portable
     file_size = ftell(fp_upp);
 	rewind(fp_upp);
-	
-	//printf("unipath position point: %"PRId64" %u\n", file_size, ftell(fp_upp));
-	
-	//if(file_size != upp_n)	printf("uniposp real size different with its size \n");
+
 	upp_n = file_size;
 	
 #ifdef	UNPIPATH_OFF_K20
@@ -890,7 +877,7 @@ void load_index_file()
     fclose(fp_upp);
 	
     //read input unipath hash file
-    printf("Load unipath hash\n");
+    fprintf(stderr, "Load unipath hash\n");
 
     fp_hash = fopen(unihash_g, "rb");
     if(fp_hash == NULL)
@@ -902,10 +889,7 @@ void load_index_file()
 	fseek(fp_hash, 0, SEEK_END);// non-portable
     file_size = ftell(fp_hash);
 	rewind(fp_hash);
-	
-	//printf("unipath hash: %"PRId64" %u\n", file_size, ftell(fp_hash));
-	
-	//if(file_size != hash_n)	printf("unihash_g real size different with its size \n");
+
 	hash_n = file_size;
 	
 #ifdef	UNPIPATH_OFF_K20
@@ -941,12 +925,11 @@ void load_index_file()
         exit(3);
     }
 #endif
-	//printf("number of unipath hash is %u\n", result_hash_g);
-	
+
     fclose(fp_hash);
 
     //read input graph kmer file
-    printf("Load unipath kmer\n");
+    fprintf(stderr, "Load unipath kmer\n");
 
     fp_kmer = fopen(unikmer_g, "rb");
     if(fp_kmer == NULL)
@@ -958,10 +941,7 @@ void load_index_file()
 	fseek(fp_kmer, 0, SEEK_END);// non-portable
     file_size = ftell(fp_kmer);
 	rewind(fp_kmer);
-	
-	//printf("unipath kmer: %"PRId64" %u\n", file_size, ftell(fp_kmer));
-	
-	//if(file_size != kmer_n)	printf("unikmer_g real size different with its size \n");
+
 	kmer_n = file_size;
 	
     a_size = (kmer_n >> 2);
@@ -986,22 +966,19 @@ void load_index_file()
     fclose(fp_kmer);
 
     //read input graph off file
-    printf("Load unipath off\n");
+    fprintf(stderr, "Load unipath off\n");
 
     fp_off = fopen(unioff_g, "rb");
     if(fp_off == NULL)
     {
-        fputs ("File error opening the graph hash file\n",stderr);
+        fprintf(stderr, "File error opening the graph hash file\n");
         exit (1);
     }
 	
 	fseek(fp_off, 0, SEEK_END);// non-portable
     file_size = ftell(fp_off);
 	rewind(fp_off);
-	
-	//printf("unipath off: %"PRId64" %u\n", file_size, ftell(fp_off));
-	
-	//if(file_size != off_n)	printf("unioff_g real size different with its size \n");
+
 	off_n = file_size;
 	
     // copy the file into the buffer:
@@ -1068,9 +1045,6 @@ void load_index_file()
 	chr_end_n[0] = START_POS_REF + 1;
 
 	strcpy(chr_names[chr_file_n], "*");
-	
-	//printf("chr_file_n: %u %s\n", chr_file_n, chr_names[chr_file_n]);
-	
 }
 
 

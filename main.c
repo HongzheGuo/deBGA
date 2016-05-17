@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 	
 	if(re == 0)
 	{
-		printf("Program finished\n");
+		fprintf(stderr, "Program finished\n");
 	}
 }
 

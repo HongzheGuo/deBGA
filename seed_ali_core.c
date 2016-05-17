@@ -85,7 +85,7 @@ static void *worker_single_end(void *data)
 
 int seed_ali()
 {
-	printf("pair end reads mapping\n\n");
+	fprintf(stderr, "pair end reads mapping\n\n");
 
 	double t = 0.00;
 	clock_t start = 0, end = 0;
@@ -124,16 +124,22 @@ int seed_ali()
 
 	if((fp1 == NULL) || (fp2 == NULL))
 	{
-		printf("wrong input file route or name: %s %s\n", read_fastq1, read_fastq2);
+
+		fprintf(stderr, "wrong input file route or name: %s %s\n", read_fastq1, read_fastq2);
+
 		exit(1);
 	}
 
-	fp_sam = fopen(sam_result, "w");
-	if(fp_sam == NULL)
+	if(flag_std == 0)
 	{
-		printf("wrong output file route or name: %s\n", sam_result);
-		exit(1);
+		fp_sam = fopen(sam_result, "w");
+		if(fp_sam == NULL)
+		{
+			fprintf(stderr, "wrong output file route or name: %s\n", sam_result);
+			exit(1);
+		}
 	}
+	
 
 	seed_l_max = seed_step * cir_fix_n;
 
@@ -145,24 +151,32 @@ int seed_ali()
 	seed_filter_pos_num = seed_filter_pos_numn >> 2;
 #endif
 
-	printf("number of threads: %u\nkmer size: %u\ninsert size: %u\nstandard varaiance: %"PRId64"\nseed interval: %u\nthe max read length: %u\nmax lv error rate: %.2f\nmax pair error rate: %.2f\nthe minimum seed interval: %u\nthe number of seed circulation: %u\nlv rate on anchor: %.2f\nthe max rate of mismatch alignment on anchor: %.2f\n", thread_n, k_t, insert_dis, (devi / 3), pair_ran_intvp, readlen_max, lv_rate, max_pair_score_r, seed_step, cir_fix_n, lv_rate_anchor, mis_match_r_single);
 
-	printf("local alignment score match: %d mismatch: %d  gap open: %d  gap extension: %d\n", mat_score, mis_score, gapo_score, gape_score);
+	//fprintf(stderr, "number of threads: %u\nkmer size: %u\ninsert size: %u\nstandard varaiance: %"PRId64"\nseed interval: %u\nthe max read length: %u\nmax lv error rate: %.2f\nmax pair error rate: %.2f\nthe minimum seed interval: %u\nthe number of seed circulation: %u\nlv rate on anchor: %.2f\nthe max rate of mismatch alignment on anchor: %.2f\n", thread_n, k_t, insert_dis, (devi / 3), pair_ran_intvp, readlen_max, lv_rate, max_pair_score_r, seed_step, cir_fix_n, lv_rate_anchor, mis_match_r_single);
+	fprintf(stderr, "number of threads: %u\nkmer size: %u\nseed interval: %u\nthe max read length: %u\nmax lv error rate: %.2f\nmax pair error rate: %.2f\nthe minimum seed interval: %u\nthe number of seed circulation: %u\nlv rate on anchor: %.2f\nthe max rate of mismatch alignment on anchor: %.2f\n", thread_n, k_t, pair_ran_intvp, readlen_max, lv_rate, max_pair_score_r, seed_step, cir_fix_n, lv_rate_anchor, mis_match_r_single);
 
-	printf("%lf seconds is used for loading index\n", t);
+	fprintf(stderr, "local alignment score match: %d mismatch: %d  gap open: %d  gap extension: %d\n", mat_score, mis_score, gapo_score, gape_score);
 
-	if(local_ksw)	printf("use local sw alignment\n");
-	if(last_circle_rate)	printf("use last circle end-to-end alignment and the max rate of alignment score is %.2f\n", last_circle_rate);
-	if(!mgn_flag)	printf("use the mode of multi-genomes\n");
+	fprintf(stderr, "%lf seconds is used for loading index\n", t);
+
+	if(local_ksw)	fprintf(stderr, "use local sw alignment\n");
+	if(last_circle_rate)	fprintf(stderr, "use last circle end-to-end alignment and the max rate of alignment score is %.2f\n", last_circle_rate);
+	if(!mgn_flag)	fprintf(stderr, "use the mode of multi-genomes\n");
 
 #ifdef	LV_MP
-	printf("cal mapping quality on LV\n");
+
+	fprintf(stderr, "cal mapping quality on LV\n");
+
 #endif
 
 #ifdef	QUAL_ANCHOR
-	printf("use quality in anchor\n");
-#endif
 
+	fprintf(stderr, "use quality in anchor\n");
+
+#endif
+	if(flag_std)
+		fprintf(stderr, "output alignments by stdout\n");
+	
 	k_r = k_t - k;
 	re_b = 32 - k_t;
 	re_bt = (re_b << 1);
@@ -294,7 +308,9 @@ int seed_ali()
 	for(r_i = 0; r_i < thread_n; r_i++)
 		seedpa2[1][r_i] = (seed_pa* )calloc(new_seed_cnt, sizeof(seed_pa ));
 
-	printf("Load seed reduction allocation\n");
+
+	fprintf(stderr, "Load seed reduction allocation\n");
+
 
 #ifdef	ALTER_DEBUG
 	seed_length_arr = (seed_length_array** )calloc(thread_n, sizeof(seed_length_array* ));
@@ -481,7 +497,9 @@ int seed_ali()
 				exit(1);
 	}
 
-	printf("Load alignment allocation\n");
+
+	fprintf(stderr, "Load alignment allocation\n");
+
 
 #ifdef ALT_ALL
 
@@ -535,7 +553,9 @@ int seed_ali()
 
 #endif
 
-	printf("Load output allocation\n");
+
+	fprintf(stderr, "Load output allocation\n");
+
 
 #ifdef	REDUCE_ANCHOR
 	rcs1 = (uint8_t** )calloc(thread_n, sizeof(uint8_t* ));
@@ -594,7 +614,9 @@ int seed_ali()
 	for(r_i = 0; r_i < thread_n; r_i++)
 		seed_no2[r_i] = (uint32_t* )calloc(CUS_SEED_SET, 4);
 
-	printf("Load alignment more allocation\n");
+
+	fprintf(stderr, "Load alignment more allocation\n");
+
 
 #ifdef	PAIR_RANDOM
 
@@ -788,7 +810,9 @@ int seed_ali()
 		pr_lv_re2[r_i] = (uint8_t* )calloc(pr_single_outputn, 1);
 #endif
 
-	printf("Load pair random allocation\n");
+
+	fprintf(stderr, "Load pair random allocation\n");
+
 
 #ifdef	PAIR_RANDOM_SEED
 	seed_r_dup = (uint32_t* )calloc(RANDOM_RANGE, 4);
@@ -1018,12 +1042,14 @@ int seed_ali()
 	//end thread gloabl value
 #endif
 
-	printf("successfully allocate memory\n");
+
+	fprintf(stderr, "successfully allocate memory\n");
 
 	InitiateLVCompute(L, thread_n);
 
 	//for pthread read input
-	printf("Load seq input memory\n");
+
+	fprintf(stderr, "Load seq input memory\n");
 
 	seqio = (seq_io* )calloc(read_in, sizeof(seq_io));
 
@@ -1051,6 +1077,13 @@ int seed_ali()
 	for(r_i = 0; r_i < read_in; r_i++)
 		qual2_buffer[r_i] = (char* )calloc(readlen_max, 1);
 
+#ifdef	FIX_SA
+	read_rev_buffer_1 = (char** )calloc(read_in, sizeof(char* ));
+	for(r_i = 0; r_i < read_in; r_i++)
+		read_rev_buffer_1[r_i] = (char* )calloc(readlen_max, 1);
+#endif
+
+
 #ifdef	OUTPUT_ARR
 	read_rev_buffer = (char** )calloc(read_in, sizeof(char* ));
 	for(r_i = 0; r_i < read_in; r_i++)
@@ -1067,12 +1100,12 @@ int seed_ali()
 	chr_res_buffer = (int** )calloc(read_in, sizeof(int* ));
 	for(r_i = 0; r_i < read_in; r_i++)
 		chr_res_buffer[r_i] = (int* )calloc(CUS_MAX_OUTPUT_ALI2, 4);
-	
+
 #ifdef	FIX_SV
 	chr_res_buffer1 = (int** )calloc(read_in, sizeof(int* ));
 	for(r_i = 0; r_i < read_in; r_i++)
 		chr_res_buffer1[r_i] = (int* )calloc(CUS_MAX_OUTPUT_ALI2, 4);
-	
+
 	chr_res_buffer2 = (int** )calloc(read_in, sizeof(int* ));
 	for(r_i = 0; r_i < read_in; r_i++)
 		chr_res_buffer2[r_i] = (int* )calloc(CUS_MAX_OUTPUT_ALI2, 4);
@@ -1209,18 +1242,34 @@ int seed_ali()
 
 	t = (double)(end - start) / CLOCKS_PER_SEC;
 
-	printf("%lf seconds is used for allocating memory\n", t);
+	fprintf(stderr, "%lf seconds is used for allocating memory\n", t);
 
 	//write .sam head into result file
-	for(r_i = 1; r_i < chr_file_n; r_i++)
-		fprintf(fp_sam, "@SQ\tSN:%s\tLN:%u\n", chr_names[r_i], (uint32_t )(chr_end_n[r_i] - chr_end_n[r_i - 1]));
 
-	fprintf(fp_sam, "@RG\tID:L1\tPU:SC_1_10\tLB:SC_1\tSM:NA12878\n");
-	fprintf(fp_sam, "@RG\tID:L2\tPU:SC_2_12\tLB:SC_2\tSM:NA12878\n");
+	if(flag_std)
+		for(r_i = 1; r_i < chr_file_n; r_i++)
+			printf("@SQ\tSN:%s\tLN:%u\n", chr_names[r_i], (uint32_t )(chr_end_n[r_i] - chr_end_n[r_i - 1]));
+	else
+		for(r_i = 1; r_i < chr_file_n; r_i++)
+			fprintf(fp_sam, "@SQ\tSN:%s\tLN:%u\n", chr_names[r_i], (uint32_t )(chr_end_n[r_i] - chr_end_n[r_i - 1]));
 
-	printf("begin reading fastq pair-end reads and doing seed reduction and alignment\n");
-	fflush(stdout);
-	
+
+#ifdef	RD_FILED
+
+	if(flag_std)
+	{
+		printf("@RG\tID:L1\tPU:SC_1_10\tLB:SC_1\tSM:NA12878\n");
+		printf("@RG\tID:L2\tPU:SC_2_12\tLB:SC_2\tSM:NA12878\n");
+	}else{
+		fprintf(fp_sam, "@RG\tID:L1\tPU:SC_1_10\tLB:SC_1\tSM:NA12878\n");
+		fprintf(fp_sam, "@RG\tID:L2\tPU:SC_2_12\tLB:SC_2\tSM:NA12878\n");
+	}
+
+#endif
+
+	fprintf(stderr, "begin reading fastq pair-end reads and doing alignment\n");
+	//fflush(stdout);
+
 #ifdef	R_W_LOCK
 	pthread_rwlock_init(&rwlock, NULL);
 	int seqii_i = 0;
@@ -1233,11 +1282,16 @@ int seed_ali()
 
 	char tmp_pos_ch;
 
-#ifdef	FIX_SV
+#ifdef	FIX_SA
+	uint16_t xa_n_p1_tmp = 0;
+	uint16_t sam_seq_i = 0;
+	char sam_seq1[MAX_READLEN] = {};
 	uint16_t flag_tmp = 0;
 	char* seq_tmp = NULL;
+	char* read_tmp = NULL;
 	char* qual_tmp = NULL;
-#endif	
+#endif
+
 	while ((kr1 > 0) && (kr2 > 0))
 	{
 		for(seqii = 0; (seqii < read_in) && (((kr1 = kseq_read(seq1)) > 0) && ((kr2 = kseq_read(seq2)) > 0)); seqii++)   //((kr1 > 0) && (kr2 > 0))
@@ -1299,6 +1353,7 @@ int seed_ali()
 
 			seqio[seqii].qual1 = qual1_buffer[seqii];
 			seqio[seqii].qual2 = qual2_buffer[seqii];
+			
 		}
 
 		if(thread_n <= 1)
@@ -1335,240 +1390,694 @@ int seed_ali()
 			free(tid);
 		}
 
-#ifdef	POST_DEBUG
-		printf("print\n");
-#endif
-		//output
+
+		if(flag_std)
+		{
+			//output
 #ifdef	OUTPUT_ARR
 
-		for(seqi = 0; seqi < seqii; seqi++)
+			for(seqi = 0; seqi < seqii; seqi++)
+			{
+				if((seqio[seqi].flag1 == 77) && (seqio[seqi].flag2 == 141))	tmp_pos_ch = '*';
+				else	tmp_pos_ch = '=';
+
+				if(seqio[seqi].length_h1 == 0)
+				{
+					if(seqio[seqi].chr_re1 == seqio[seqi].chr_re2)
+					{
+						printf("%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t%"PRId64"\t%s\t%s",
+						       seqio[seqi].name, seqio[seqi].flag1, chr_names[seqio[seqi].chr_re1], seqio[seqi].pos1,
+						       seqio[seqi].qualc1, seqio[seqi].cigar1, tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].cross, seqio[seqi].seq1,
+						       seqio[seqi].qual1
+						      );
+					}
+					else
+					{
+						printf("%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t0\t%s\t%s",
+						       seqio[seqi].name, seqio[seqi].flag1, chr_names[seqio[seqi].chr_re1], seqio[seqi].pos1,
+						       seqio[seqi].qualc1, seqio[seqi].cigar1, tmp_pos_ch, seqio[seqi].pos1, seqio[seqi].seq1,
+						       seqio[seqi].qual1
+						      );
+					}
+
+
+					if(seqio[seqi].xa_n_p1 > 0)
+					{
+						printf("\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_p1; v_cnt_i++)
+							printf("%s,%c%u,%s,%d;",chr_names[seqio[seqi].chr_res[v_cnt_i]], seqio[seqi].xa_d1s[v_cnt_i], seqio[seqi].sam_pos1s[v_cnt_i], seqio[seqi].cigar_p1s[v_cnt_i], seqio[seqi].lv_re1s[v_cnt_i]);			}
+
+#ifdef	PR_SINGLE
+					if(seqio[seqi].xa_n1 > 0)
+					{
+						if((seqio[seqi].xa_n_p1 == 0) && (seqio[seqi].xa_n1 > 0))	printf("\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n1; v_cnt_i++)
+							printf("%s,%c%u,%uM,%u;", chr_names[seqio[seqi].chr_res1[v_cnt_i]], seqio[seqi].xa_ds1[v_cnt_i], seqio[seqi].sam_poss1[v_cnt_i], seqio[seqi].read_length1, seqio[seqi].lv_res1[v_cnt_i]);
+
+					}
+#endif
+
+#ifdef	FIX_SA
+					if(seqio[seqi].xa_n_x1 > 0)
+					{
+
+						xa_n_p1_tmp = seqio[seqi].xa_n_p1;
+						printf("\tSA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x1; v_cnt_i++)
+						{
+							printf("%s,%u,%c,%s,%u,%d;", chr_names[seqio[seqi].chr_res_s1[v_cnt_i]], seqio[seqi].sam_pos1s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].xa_d1s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].cigar_p1s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].qualc1, seqio[seqi].lv_re1s[v_cnt_i + xa_n_p1_tmp]);
+
+						}
+
+					}
+#endif
+
+#ifdef	RD_FILED
+
+					printf("\tNM:i:%u\tRG:Z:L1\n", seqio[seqi].nm1);
+
+#else
+
+					printf("\tNM:i:%u\n", seqio[seqi].nm1);
+
+
+#endif
+				}
+				else
+				{
+					sprintf(h_chars, "%uH", seqio[seqi].length_h1);
+					if(seqio[seqi].chr_re1 == seqio[seqi].chr_re2)
+					{
+						printf("%s\t%u\t%s\t%"PRId64"\t%d\t%s%s\t%c\t%"PRId64"\t%"PRId64"\t%s\t%s",
+						       seqio[seqi].name, seqio[seqi].flag1, chr_names[seqio[seqi].chr_re1], seqio[seqi].pos1,
+						       seqio[seqi].qualc1, seqio[seqi].cigar1, h_chars, tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].cross, seqio[seqi].seq1,
+						       seqio[seqi].qual1
+						      );
+
+					}
+					else
+					{
+						printf("%s\t%u\t%s\t%"PRId64"\t%d\t%s%s\t%c\t%"PRId64"\t0\t%s\t%s",
+						       seqio[seqi].name, seqio[seqi].flag1, chr_names[seqio[seqi].chr_re1], seqio[seqi].pos1,
+						       seqio[seqi].qualc1, seqio[seqi].cigar1, h_chars, tmp_pos_ch, seqio[seqi].pos1, seqio[seqi].seq1,
+						       seqio[seqi].qual1
+						      );
+
+					}
+
+
+					if(seqio[seqi].xa_n_p1 > 0)
+					{
+						printf("\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_p1; v_cnt_i++)
+						{
+							printf("%s,%c%u,%s%s,%d;",chr_names[seqio[seqi].chr_res[v_cnt_i]], seqio[seqi].xa_d1s[v_cnt_i], seqio[seqi].sam_pos1s[v_cnt_i], seqio[seqi].cigar_p1s[v_cnt_i], h_chars, seqio[seqi].lv_re1s[v_cnt_i]);
+						}
+
+					}
+					printf("NM:i:%u\t", seqio[seqi].nm1);
+
+#ifdef	PR_SINGLE
+					if(seqio[seqi].xa_n1 > 0)
+					{
+						if((seqio[seqi].xa_n_p1 == 0) && (seqio[seqi].xa_n1 > 0))	printf("\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n1; v_cnt_i++)
+							printf("%s,%c%u,%uM,%u;", chr_names[seqio[seqi].chr_res1[v_cnt_i]], seqio[seqi].xa_ds1[v_cnt_i], seqio[seqi].sam_poss1[v_cnt_i], seqio[seqi].read_length1, seqio[seqi].lv_res1[v_cnt_i]);
+
+					}
+#endif
+
+#ifdef	FIX_SA
+					if(seqio[seqi].xa_n_x1 > 0)
+					{
+						xa_n_p1_tmp = seqio[seqi].xa_n_p1;
+
+						printf("\tSA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x1; v_cnt_i++)
+						{
+							printf("%s,%u,%c,%s,%u,%d;", chr_names[seqio[seqi].chr_res_s1[v_cnt_i]], seqio[seqi].sam_pos1s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].xa_d1s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].cigar_p1s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].qualc1, seqio[seqi].lv_re1s[v_cnt_i + xa_n_p1_tmp]);
+						}
+					}
+#endif
+
+#ifdef	RD_FILED
+
+					printf("\tNM:i:%u\tRG:Z:L1\n", seqio[seqi].nm1);
+
+#else
+
+					printf("\tNM:i:%u\n", seqio[seqi].nm1);
+
+#endif
+				}
+
+#ifdef FIX_SV
+
+#ifndef	FIX_SA
+
+				for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x1; v_cnt_i++)
+				{
+					if(seqio[seqi].xa_d1s[v_cnt_i + seqio[seqi].xa_n_p1] == '+')
+					{
+						flag_tmp = 2145;
+						seq_tmp = seqio[seqi].read_seq1;
+					}
+					else
+					{
+						flag_tmp = 2129;
+						read_tmp = seqio[seqi].read_seq1;
+						for(sam_seq_i = 0; sam_seq_i < seqio[seqi].read_length1; sam_seq_i++)
+							sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[read_tmp[sam_seq_i]] ^ 0X3];
+						sam_seq1[sam_seq_i] = '\0';
+						strrev1(sam_seq1);
+						seq_tmp = sam_seq1;
+					}
+					qual_tmp = seqio[seqi].qual1;
+
+					printf("%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t%d\t%s\t%s\tNM:i:%u\tRG:Z:L1\n",
+					       seqio[seqi].name, flag_tmp, chr_names[seqio[seqi].chr_res_s1[v_cnt_i]], seqio[seqi].sam_pos1s[v_cnt_i + seqio[seqi].xa_n_p1],
+					       seqio[seqi].qualc1, seqio[seqi].cigar_p1s[v_cnt_i + seqio[seqi].xa_n_p1], tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].pos2 - seqio[seqi].sam_pos1s[v_cnt_i + seqio[seqi].xa_n_p1], seq_tmp,
+					       qual_tmp, seqio[seqi].lv_re1s[v_cnt_i + seqio[seqi].xa_n_p1]
+					      );
+
+				}
+#endif
+				
+#endif
+
+				if(seqio[seqi].length_h2 == 0)
+				{
+					if(seqio[seqi].chr_re1 == seqio[seqi].chr_re2)
+					{
+						printf("%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t%"PRId64"\t%s\t%s",
+						       seqio[seqi].name_other, seqio[seqi].flag2, chr_names[seqio[seqi].chr_re2], seqio[seqi].pos2,
+						       seqio[seqi].qualc2, seqio[seqi].cigar2, tmp_pos_ch, seqio[seqi].pos1, -seqio[seqi].cross, seqio[seqi].seq2,
+						       seqio[seqi].qual2
+						      );
+					}
+					else
+					{
+						printf("%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t0\t%s\t%s",
+						       seqio[seqi].name_other, seqio[seqi].flag2, chr_names[seqio[seqi].chr_re2], seqio[seqi].pos2,
+						       seqio[seqi].qualc2, seqio[seqi].cigar2, tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].seq2,
+						       seqio[seqi].qual2
+						      );
+					}
+
+
+					if(seqio[seqi].xa_n_p2 > 0)
+					{
+						printf("\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_p2; v_cnt_i++)
+							printf("%s,%c%u,%s,%d;",chr_names[seqio[seqi].chr_res[v_cnt_i]], seqio[seqi].xa_d2s[v_cnt_i], seqio[seqi].sam_pos2s[v_cnt_i], seqio[seqi].cigar_p2s[v_cnt_i], seqio[seqi].lv_re2s[v_cnt_i]);
+
+					}
+#ifdef	PR_SINGLE
+					if(seqio[seqi].xa_n2 > 0)
+					{
+						if((seqio[seqi].xa_n_p2 == 0) && (seqio[seqi].xa_n2 > 0))	printf("\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n2; v_cnt_i++)
+							printf("%s,%c%u,%uM,%u;", chr_names[seqio[seqi].chr_res2[v_cnt_i]], seqio[seqi].xa_ds2[v_cnt_i], seqio[seqi].sam_poss2[v_cnt_i], seqio[seqi].read_length2, seqio[seqi].lv_res2[v_cnt_i]);
+
+					}
+#endif
+
+#ifdef	FIX_SA
+					if(seqio[seqi].xa_n_x2 > 0)
+					{
+						xa_n_p1_tmp = seqio[seqi].xa_n_p2;
+						printf("\tSA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x2; v_cnt_i++)
+						{
+							printf("%s,%u,%c,%s,%u,%d;", chr_names[seqio[seqi].chr_res_s2[v_cnt_i]], seqio[seqi].sam_pos2s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].xa_d2s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].cigar_p2s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].qualc2, seqio[seqi].lv_re2s[v_cnt_i + xa_n_p1_tmp]);
+
+						}
+
+					}
+#endif
+
+#ifdef	RD_FILED
+
+					printf("\tNM:i:%u\tRG:Z:L2\n", seqio[seqi].nm2);
+#else
+
+					printf("\tNM:i:%u\n", seqio[seqi].nm2);
+
+#endif
+
+				}
+				else
+				{
+					sprintf(h_chars, "%uH", seqio[seqi].length_h2);
+					if(seqio[seqi].chr_re1 == seqio[seqi].chr_re2)
+					{
+						printf("%s\t%u\t%s\t%"PRId64"\t%d\t%s%s\t%c\t%"PRId64"\t%"PRId64"\t%s\t%s",
+						       seqio[seqi].name_other, seqio[seqi].flag2, chr_names[seqio[seqi].chr_re2], seqio[seqi].pos2,
+						       seqio[seqi].qualc2, seqio[seqi].cigar2, h_chars, tmp_pos_ch, seqio[seqi].pos1, -seqio[seqi].cross, seqio[seqi].seq2,
+						       seqio[seqi].qual2
+						      );
+					}
+					else
+					{
+						printf("%s\t%u\t%s\t%"PRId64"\t%d\t%s%s\t%c\t%"PRId64"\t0\t%s\t%s",
+						       seqio[seqi].name_other, seqio[seqi].flag2, chr_names[seqio[seqi].chr_re2], seqio[seqi].pos2,
+						       seqio[seqi].qualc2, seqio[seqi].cigar2, h_chars, tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].seq2,
+						       seqio[seqi].qual2
+						      );
+					}
+
+
+					if(seqio[seqi].xa_n_p2 > 0)
+					{
+						printf( "\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_p2; v_cnt_i++)
+						{
+							printf("%s,%c%u,%s%s,%d;",chr_names[seqio[seqi].chr_res[v_cnt_i]], seqio[seqi].xa_d2s[v_cnt_i], seqio[seqi].sam_pos2s[v_cnt_i], seqio[seqi].cigar_p2s[v_cnt_i], h_chars, seqio[seqi].lv_re2s[v_cnt_i]);
+						}
+					}
+#ifdef	PR_SINGLE
+					if(seqio[seqi].xa_n2 > 0)
+					{
+						if((seqio[seqi].xa_n_p2 == 0) && (seqio[seqi].xa_n2 > 0))	printf("\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n2; v_cnt_i++)
+							printf("%s,%c%u,%uM,%u;", chr_names[seqio[seqi].chr_res2[v_cnt_i]], seqio[seqi].xa_ds2[v_cnt_i], seqio[seqi].sam_poss2[v_cnt_i], seqio[seqi].read_length2, seqio[seqi].lv_res2[v_cnt_i]);
+
+					}
+#endif
+
+#ifdef	FIX_SA
+
+					if(seqio[seqi].xa_n_x2 > 0)
+					{
+						xa_n_p1_tmp = seqio[seqi].xa_n_p2;
+						printf("\tSA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x2; v_cnt_i++)
+						{
+							printf("%s,%u,%c,%s,%u,%d;", chr_names[seqio[seqi].chr_res_s2[v_cnt_i]], seqio[seqi].sam_pos2s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].xa_d2s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].cigar_p2s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].qualc2, seqio[seqi].lv_re2s[v_cnt_i + xa_n_p1_tmp]);
+
+						}
+					}
+#endif
+
+#ifdef	RD_FILED
+
+					printf("\tNM:i:%u\tRG:Z:L2\n", seqio[seqi].nm2);
+#else
+
+					printf("\tNM:i:%u\n", seqio[seqi].nm2);
+
+#endif
+				}
+
+
+#ifdef FIX_SV
+
+#ifndef	FIX_SA
+				
+				for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x2; v_cnt_i++)
+				{
+					if(seqio[seqi].xa_d2s[v_cnt_i + seqio[seqi].xa_n_p2] == '+')
+					{
+						flag_tmp = 2209;
+						seq_tmp = seqio[seqi].read_seq2;
+					}
+					else
+					{
+						flag_tmp = 2193;
+						read_tmp = seqio[seqi].read_seq2;
+						for(sam_seq_i = 0; sam_seq_i < seqio[seqi].read_length2; sam_seq_i++)
+							sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[read_tmp[sam_seq_i]] ^ 0X3];
+						sam_seq1[sam_seq_i] = '\0';
+						strrev1(sam_seq1);
+						seq_tmp = sam_seq1;
+					}
+
+					qual_tmp = seqio[seqi].qual2;
+
+					//seqio[seqi].read_seq1
+					//read_rev_buffer[seqi]
+					printf("%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t%d\t%s\t%s\tNM:i:%u\tRG:Z:L2\n",
+					       seqio[seqi].name_other, flag_tmp, chr_names[seqio[seqi].chr_res_s2[v_cnt_i]], seqio[seqi].sam_pos2s[v_cnt_i + seqio[seqi].xa_n_p2],
+					       seqio[seqi].qualc2, seqio[seqi].cigar_p2s[v_cnt_i + seqio[seqi].xa_n_p2], tmp_pos_ch, seqio[seqi].sam_pos2s[v_cnt_i + seqio[seqi].xa_n_p2], seqio[seqi].sam_pos2s[v_cnt_i + seqio[seqi].xa_n_p2] - seqio[seqi].pos1, seq_tmp,
+					       qual_tmp, seqio[seqi].lv_re2s[v_cnt_i + seqio[seqi].xa_n_p2]
+					      );
+				}
+				
+#endif
+
+#endif
+			}
+#endif
+		}
+		else
 		{
-			if((seqio[seqi].flag1 == 77) && (seqio[seqi].flag2 == 141))	tmp_pos_ch = '*';
-			else	tmp_pos_ch = '=';
+			//output
+#ifdef	OUTPUT_ARR
 
-			if(seqio[seqi].length_h1 == 0)
+			for(seqi = 0; seqi < seqii; seqi++)
 			{
-				if(seqio[seqi].chr_re1 == seqio[seqi].chr_re2)
-				{
-					fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t%"PRId64"\t%s\t%s",
-				        seqio[seqi].name, seqio[seqi].flag1, chr_names[seqio[seqi].chr_re1], seqio[seqi].pos1,
-				        seqio[seqi].qualc1, seqio[seqi].cigar1, tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].cross, seqio[seqi].seq1,
-				        seqio[seqi].qual1
-				       );
-				}else{
-					fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t0\t%s\t%s",
-				        seqio[seqi].name, seqio[seqi].flag1, chr_names[seqio[seqi].chr_re1], seqio[seqi].pos1,
-				        seqio[seqi].qualc1, seqio[seqi].cigar1, tmp_pos_ch, seqio[seqi].pos1, seqio[seqi].seq1,
-				        seqio[seqi].qual1
-				       );
-				}
-					
+				if((seqio[seqi].flag1 == 77) && (seqio[seqi].flag2 == 141))	tmp_pos_ch = '*';
+				else	tmp_pos_ch = '=';
 
-				if(seqio[seqi].xa_n_p1 > 0)
+				if(seqio[seqi].length_h1 == 0)
 				{
-					fprintf(fp_sam, "\tXA:Z:");
-					for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_p1; v_cnt_i++)
-						fprintf(fp_sam, "%s,%c%u,%s,%d;",chr_names[seqio[seqi].chr_res[v_cnt_i]], seqio[seqi].xa_d1s[v_cnt_i], seqio[seqi].sam_pos1s[v_cnt_i], seqio[seqi].cigar_p1s[v_cnt_i], seqio[seqi].lv_re1s[v_cnt_i]);
-				}
-
-#ifdef	PR_SINGLE
-				if(seqio[seqi].xa_n1 > 0)
-				{
-					if((seqio[seqi].xa_n_p1 == 0) && (seqio[seqi].xa_n1 > 0))	fprintf(fp_sam, "\tXA:Z:");
-					for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n1; v_cnt_i++)
-						fprintf(fp_sam, "%s,%c%u,%uM,%u;", chr_names[seqio[seqi].chr_res1[v_cnt_i]], seqio[seqi].xa_ds1[v_cnt_i], seqio[seqi].sam_poss1[v_cnt_i], seqio[seqi].read_length1, seqio[seqi].lv_res1[v_cnt_i]);
-				}
-#endif
-				fprintf(fp_sam, "\tNM:i:%u\tRG:Z:L1\n", seqio[seqi].nm1);							
-			}
-			else
-			{
-				sprintf(h_chars, "%uH", seqio[seqi].length_h1);
-				if(seqio[seqi].chr_re1 == seqio[seqi].chr_re2)
-				{
-					fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s%s\t%c\t%"PRId64"\t%"PRId64"\t%s\t%s",
-				        seqio[seqi].name, seqio[seqi].flag1, chr_names[seqio[seqi].chr_re1], seqio[seqi].pos1,
-				        seqio[seqi].qualc1, seqio[seqi].cigar1, h_chars, tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].cross, seqio[seqi].seq1,
-				        seqio[seqi].qual1
-				       );
-				}else{
-					fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s%s\t%c\t%"PRId64"\t0\t%s\t%s",
-				        seqio[seqi].name, seqio[seqi].flag1, chr_names[seqio[seqi].chr_re1], seqio[seqi].pos1,
-				        seqio[seqi].qualc1, seqio[seqi].cigar1, h_chars, tmp_pos_ch, seqio[seqi].pos1, seqio[seqi].seq1,
-				        seqio[seqi].qual1
-				       );
-				}
-				
-
-				if(seqio[seqi].xa_n_p1 > 0)
-				{
-					fprintf(fp_sam, "\tXA:Z:");
-					for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_p1; v_cnt_i++)
+					if(seqio[seqi].chr_re1 == seqio[seqi].chr_re2)
 					{
-						fprintf(fp_sam, "%s,%c%u,%s%s,%d;",chr_names[seqio[seqi].chr_res[v_cnt_i]], seqio[seqi].xa_d1s[v_cnt_i], seqio[seqi].sam_pos1s[v_cnt_i], seqio[seqi].cigar_p1s[v_cnt_i], h_chars, seqio[seqi].lv_re1s[v_cnt_i]);
+						fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t%"PRId64"\t%s\t%s",
+						        seqio[seqi].name, seqio[seqi].flag1, chr_names[seqio[seqi].chr_re1], seqio[seqi].pos1,
+						        seqio[seqi].qualc1, seqio[seqi].cigar1, tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].cross, seqio[seqi].seq1,
+						        seqio[seqi].qual1
+						       );
+
+					}
+					else
+					{
+
+						fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t0\t%s\t%s",
+						        seqio[seqi].name, seqio[seqi].flag1, chr_names[seqio[seqi].chr_re1], seqio[seqi].pos1,
+						        seqio[seqi].qualc1, seqio[seqi].cigar1, tmp_pos_ch, seqio[seqi].pos1, seqio[seqi].seq1,
+						        seqio[seqi].qual1
+						       );
+
 					}
 
-				}
-				fprintf(fp_sam, "NM:i:%u\t", seqio[seqi].nm1);
-#ifdef	PR_SINGLE
-				if(seqio[seqi].xa_n1 > 0)
-				{
-					if((seqio[seqi].xa_n_p1 == 0) && (seqio[seqi].xa_n1 > 0))	fprintf(fp_sam, "\tXA:Z:");
-					for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n1; v_cnt_i++)
-						fprintf(fp_sam, "%s,%c%u,%uM,%u;", chr_names[seqio[seqi].chr_res1[v_cnt_i]], seqio[seqi].xa_ds1[v_cnt_i], seqio[seqi].sam_poss1[v_cnt_i], seqio[seqi].read_length1, seqio[seqi].lv_res1[v_cnt_i]);
-				}
-#endif
-				fprintf(fp_sam, "\tNM:i:%u\tRG:Z:L1\n", seqio[seqi].nm1);
-			}
-			
-#ifdef FIX_SV
-			
-			//printf("sv out 1: %u\n", seqio[seqi].xa_n_x1);
-			
-			for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x1; v_cnt_i++)
-			{
-				if(seqio[seqi].xa_d1s[v_cnt_i + seqio[seqi].xa_n_p1] == '+')
-				{
-					flag_tmp = 2145;
-				}else{
-					flag_tmp = 2129;
-				} 
-				seq_tmp = seqio[seqi].read_seq1;
-				qual_tmp = seqio[seqi].qual1;
 
-				/*
-				printf("%u:\n",v_cnt_i);
-				printf("%s\n", seqio[seqi].name);
-				printf("%u\n",flag_tmp);
-				printf("%s\n",chr_names[seqio[seqi].chr_res_s1[v_cnt_i]]);
-				printf("%"PRId64"\n",seqio[seqi].sam_pos1s[v_cnt_i + seqio[seqi].xa_n_p1]);
-				printf("%d\n",seqio[seqi].qualc1);
-				printf("%s\n",seqio[seqi].cigar_p1s[v_cnt_i + seqio[seqi].xa_n_p1]);
-				printf("%c\n",tmp_pos_ch);
-				printf("%s\n",seq_tmp);
-				printf("%s\n",qual_tmp);
-				printf("NM:i:%u\n",seqio[seqi].lv_re1s[v_cnt_i + seqio[seqi].xa_n_p1]);
-				*/
-				   
-				fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t0\t%s\t%s\tNM:i:%u\tRG:Z:L1\n",
-				        seqio[seqi].name, flag_tmp, chr_names[seqio[seqi].chr_res_s1[v_cnt_i]], seqio[seqi].sam_pos1s[v_cnt_i + seqio[seqi].xa_n_p1],
-				        seqio[seqi].qualc1, seqio[seqi].cigar_p1s[v_cnt_i + seqio[seqi].xa_n_p1], tmp_pos_ch, seqio[seqi].sam_pos1s[v_cnt_i + seqio[seqi].xa_n_p1], seq_tmp,
-				        qual_tmp, seqio[seqi].lv_re1s[v_cnt_i + seqio[seqi].xa_n_p1]
-				       );
-					
-			}
-			
-			//printf("sv out 2\n");
-#endif			
-			
-			if(seqio[seqi].length_h2 == 0)
-			{
-				if(seqio[seqi].chr_re1 == seqio[seqi].chr_re2)
-				{
-					fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t%"PRId64"\t%s\t%s",
-				        seqio[seqi].name_other, seqio[seqi].flag2, chr_names[seqio[seqi].chr_re2], seqio[seqi].pos2,
-				        seqio[seqi].qualc2, seqio[seqi].cigar2, tmp_pos_ch, seqio[seqi].pos1, -seqio[seqi].cross, seqio[seqi].seq2,
-				        seqio[seqi].qual2
-				       );
-				}else{
-					fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t0\t%s\t%s",
-				        seqio[seqi].name_other, seqio[seqi].flag2, chr_names[seqio[seqi].chr_re2], seqio[seqi].pos2,
-				        seqio[seqi].qualc2, seqio[seqi].cigar2, tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].seq2,
-				        seqio[seqi].qual2
-				       );
-				}
-				
-
-				if(seqio[seqi].xa_n_p2 > 0)
-				{
-					fprintf(fp_sam, "\tXA:Z:");
-					for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_p2; v_cnt_i++)
-						fprintf(fp_sam, "%s,%c%u,%s,%d;",chr_names[seqio[seqi].chr_res[v_cnt_i]], seqio[seqi].xa_d2s[v_cnt_i], seqio[seqi].sam_pos2s[v_cnt_i], seqio[seqi].cigar_p2s[v_cnt_i], seqio[seqi].lv_re2s[v_cnt_i]);
-
-				}
-#ifdef	PR_SINGLE
-				if(seqio[seqi].xa_n2 > 0)
-				{
-					if((seqio[seqi].xa_n_p2 == 0) && (seqio[seqi].xa_n2 > 0))	fprintf(fp_sam, "\tXA:Z:");
-					for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n2; v_cnt_i++)
-						fprintf(fp_sam, "%s,%c%u,%uM,%u;", chr_names[seqio[seqi].chr_res2[v_cnt_i]], seqio[seqi].xa_ds2[v_cnt_i], seqio[seqi].sam_poss2[v_cnt_i], seqio[seqi].read_length2, seqio[seqi].lv_res2[v_cnt_i]);
-
-				}
-#endif
-				fprintf(fp_sam, "\tNM:i:%u\tRG:Z:L2\n", seqio[seqi].nm2);
-
-			}
-			else
-			{
-				sprintf(h_chars, "%uH", seqio[seqi].length_h2);
-				if(seqio[seqi].chr_re1 == seqio[seqi].chr_re2)
-				{
-					fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s%s\t%c\t%"PRId64"\t%"PRId64"\t%s\t%s",
-				        seqio[seqi].name_other, seqio[seqi].flag2, chr_names[seqio[seqi].chr_re2], seqio[seqi].pos2,
-				        seqio[seqi].qualc2, seqio[seqi].cigar2, h_chars, tmp_pos_ch, seqio[seqi].pos1, -seqio[seqi].cross, seqio[seqi].seq2,
-				        seqio[seqi].qual2
-				       );
-				}else{
-					fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s%s\t%c\t%"PRId64"\t0\t%s\t%s",
-				        seqio[seqi].name_other, seqio[seqi].flag2, chr_names[seqio[seqi].chr_re2], seqio[seqi].pos2,
-				        seqio[seqi].qualc2, seqio[seqi].cigar2, h_chars, tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].seq2,
-				        seqio[seqi].qual2
-				       );
-				}
-				
-
-				if(seqio[seqi].xa_n_p2 > 0)
-				{
-					fprintf(fp_sam, "\tXA:Z:");
-					for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_p2; v_cnt_i++)
+					if(seqio[seqi].xa_n_p1 > 0)
 					{
-						fprintf(fp_sam, "%s,%c%u,%s%s,%d;",chr_names[seqio[seqi].chr_res[v_cnt_i]], seqio[seqi].xa_d2s[v_cnt_i], seqio[seqi].sam_pos2s[v_cnt_i], seqio[seqi].cigar_p2s[v_cnt_i], h_chars, seqio[seqi].lv_re2s[v_cnt_i]);
+						fprintf(fp_sam, "\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_p1; v_cnt_i++)
+							fprintf(fp_sam, "%s,%c%u,%s,%d;",chr_names[seqio[seqi].chr_res[v_cnt_i]], seqio[seqi].xa_d1s[v_cnt_i], seqio[seqi].sam_pos1s[v_cnt_i], seqio[seqi].cigar_p1s[v_cnt_i], seqio[seqi].lv_re1s[v_cnt_i]);
+
 					}
 
-				}
 #ifdef	PR_SINGLE
-				if(seqio[seqi].xa_n2 > 0)
+					if(seqio[seqi].xa_n1 > 0)
+					{
+
+						if((seqio[seqi].xa_n_p1 == 0) && (seqio[seqi].xa_n1 > 0))	fprintf(fp_sam, "\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n1; v_cnt_i++)
+							fprintf(fp_sam, "%s,%c%u,%uM,%u;", chr_names[seqio[seqi].chr_res1[v_cnt_i]], seqio[seqi].xa_ds1[v_cnt_i], seqio[seqi].sam_poss1[v_cnt_i], seqio[seqi].read_length1, seqio[seqi].lv_res1[v_cnt_i]);
+
+					}
+#endif
+
+#ifdef	FIX_SA
+					if(seqio[seqi].xa_n_x1 > 0)
+					{
+
+						xa_n_p1_tmp = seqio[seqi].xa_n_p1;
+
+						fprintf(fp_sam, "\tSA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x1; v_cnt_i++)
+						{
+							fprintf(fp_sam, "%s,%u,%c,%s,%u,%d;", chr_names[seqio[seqi].chr_res_s1[v_cnt_i]], seqio[seqi].sam_pos1s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].xa_d1s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].cigar_p1s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].qualc1, seqio[seqi].lv_re1s[v_cnt_i + xa_n_p1_tmp]);
+
+						}
+					}
+#endif
+
+#ifdef	RD_FILED
+
+					fprintf(fp_sam, "\tNM:i:%u\tRG:Z:L1\n", seqio[seqi].nm1);
+
+#else
+
+					fprintf(fp_sam, "\tNM:i:%u\n", seqio[seqi].nm1);
+
+#endif
+				}
+				else
 				{
-					if((seqio[seqi].xa_n_p2 == 0) && (seqio[seqi].xa_n2 > 0))	fprintf(fp_sam, "\tXA:Z:");
-					for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n2; v_cnt_i++)
-						fprintf(fp_sam, "%s,%c%u,%uM,%u;", chr_names[seqio[seqi].chr_res2[v_cnt_i]], seqio[seqi].xa_ds2[v_cnt_i], seqio[seqi].sam_poss2[v_cnt_i], seqio[seqi].read_length2, seqio[seqi].lv_res2[v_cnt_i]);
+					sprintf(h_chars, "%uH", seqio[seqi].length_h1);
+					if(seqio[seqi].chr_re1 == seqio[seqi].chr_re2)
+					{
+						fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s%s\t%c\t%"PRId64"\t%"PRId64"\t%s\t%s",
+						        seqio[seqi].name, seqio[seqi].flag1, chr_names[seqio[seqi].chr_re1], seqio[seqi].pos1,
+						        seqio[seqi].qualc1, seqio[seqi].cigar1, h_chars, tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].cross, seqio[seqi].seq1,
+						        seqio[seqi].qual1
+						       );
+					}
+					else
+					{
+						fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s%s\t%c\t%"PRId64"\t0\t%s\t%s",
+						        seqio[seqi].name, seqio[seqi].flag1, chr_names[seqio[seqi].chr_re1], seqio[seqi].pos1,
+						        seqio[seqi].qualc1, seqio[seqi].cigar1, h_chars, tmp_pos_ch, seqio[seqi].pos1, seqio[seqi].seq1,
+						        seqio[seqi].qual1
+						       );
+					}
+
+					if(seqio[seqi].xa_n_p1 > 0)
+					{
+						fprintf(fp_sam, "\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_p1; v_cnt_i++)
+						{
+							fprintf(fp_sam, "%s,%c%u,%s%s,%d;",chr_names[seqio[seqi].chr_res[v_cnt_i]], seqio[seqi].xa_d1s[v_cnt_i], seqio[seqi].sam_pos1s[v_cnt_i], seqio[seqi].cigar_p1s[v_cnt_i], h_chars, seqio[seqi].lv_re1s[v_cnt_i]);
+						}
+
+					}
+
+					fprintf(fp_sam, "NM:i:%u\t", seqio[seqi].nm1);
+
+#ifdef	PR_SINGLE
+					if(seqio[seqi].xa_n1 > 0)
+					{
+
+						if((seqio[seqi].xa_n_p1 == 0) && (seqio[seqi].xa_n1 > 0))	fprintf(fp_sam, "\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n1; v_cnt_i++)
+							fprintf(fp_sam, "%s,%c%u,%uM,%u;", chr_names[seqio[seqi].chr_res1[v_cnt_i]], seqio[seqi].xa_ds1[v_cnt_i], seqio[seqi].sam_poss1[v_cnt_i], seqio[seqi].read_length1, seqio[seqi].lv_res1[v_cnt_i]);
+
+					}
+#endif
+
+#ifdef	FIX_SA
+					if(seqio[seqi].xa_n_x1 > 0)
+					{
+						xa_n_p1_tmp = seqio[seqi].xa_n_p1;
+
+						fprintf(fp_sam, "\tSA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x1; v_cnt_i++)
+						{
+							fprintf(fp_sam, "%s,%u,%c,%s,%u,%d;", chr_names[seqio[seqi].chr_res_s1[v_cnt_i]], seqio[seqi].sam_pos1s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].xa_d1s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].cigar_p1s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].qualc1, seqio[seqi].lv_re1s[v_cnt_i + xa_n_p1_tmp]);
+
+						}
+					}
+#endif
+
+#ifdef	RD_FILED
+
+					fprintf(fp_sam, "\tNM:i:%u\tRG:Z:L1\n", seqio[seqi].nm1);
+
+#else
+
+					fprintf(fp_sam, "\tNM:i:%u\n", seqio[seqi].nm1);
+
+#endif
+				}
+
+#ifdef FIX_SV
+
+#ifndef	FIX_SA
+				
+				for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x1; v_cnt_i++)
+				{
+					if(seqio[seqi].xa_d1s[v_cnt_i + seqio[seqi].xa_n_p1] == '+')
+					{
+						flag_tmp = 2145;
+						seq_tmp = seqio[seqi].read_seq1;
+					}
+					else
+					{
+						flag_tmp = 2129;
+						read_tmp = seqio[seqi].read_seq1;
+						for(sam_seq_i = 0; sam_seq_i < seqio[seqi].read_length1; sam_seq_i++)
+							sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[read_tmp[sam_seq_i]] ^ 0X3];
+						sam_seq1[sam_seq_i] = '\0';
+						strrev1(sam_seq1);
+						seq_tmp = sam_seq1;
+					}
+					qual_tmp = seqio[seqi].qual1;
+
+					fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t%d\t%s\t%s\tNM:i:%u\tRG:Z:L1\n",
+					        seqio[seqi].name, flag_tmp, chr_names[seqio[seqi].chr_res_s1[v_cnt_i]], seqio[seqi].sam_pos1s[v_cnt_i + seqio[seqi].xa_n_p1],
+					        seqio[seqi].qualc1, seqio[seqi].cigar_p1s[v_cnt_i + seqio[seqi].xa_n_p1], tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].pos2 - seqio[seqi].sam_pos1s[v_cnt_i + seqio[seqi].xa_n_p1], seq_tmp,
+					        qual_tmp, seqio[seqi].lv_re1s[v_cnt_i + seqio[seqi].xa_n_p1]
+					       );
 
 				}
 #endif
-				fprintf(fp_sam, "\tNM:i:%u\tRG:Z:L2\n", seqio[seqi].nm2);
-			}
-			
-			
-#ifdef FIX_SV
-			//printf("sv out 3\n");
-			
-			for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x2; v_cnt_i++)
-			{	
-				if(seqio[seqi].xa_d2s[v_cnt_i + seqio[seqi].xa_n_p2] == '+')
+				
+#endif
+
+				if(seqio[seqi].length_h2 == 0)
 				{
-					flag_tmp = 2209;
-				}else{
-					flag_tmp = 2193;
-				} 
-				
-				seq_tmp = seqio[seqi].read_seq2;
-				qual_tmp = seqio[seqi].qual2;
-				
-				//seqio[seqi].read_seq1
-				//read_rev_buffer[seqi]
-	
-				fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t0\t%s\t%s\tNM:i:%u\tRG:Z:L2\n",
-				        seqio[seqi].name_other, flag_tmp, chr_names[seqio[seqi].chr_res_s2[v_cnt_i]], seqio[seqi].sam_pos2s[v_cnt_i + seqio[seqi].xa_n_p2],
-				        seqio[seqi].qualc2, seqio[seqi].cigar_p2s[v_cnt_i + seqio[seqi].xa_n_p2], tmp_pos_ch, seqio[seqi].sam_pos2s[v_cnt_i + seqio[seqi].xa_n_p2], seq_tmp,
-				        qual_tmp, seqio[seqi].lv_re2s[v_cnt_i + seqio[seqi].xa_n_p2]
-				       );
-					
+					if(seqio[seqi].chr_re1 == seqio[seqi].chr_re2)
+					{
+						fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t%"PRId64"\t%s\t%s",
+						        seqio[seqi].name_other, seqio[seqi].flag2, chr_names[seqio[seqi].chr_re2], seqio[seqi].pos2,
+						        seqio[seqi].qualc2, seqio[seqi].cigar2, tmp_pos_ch, seqio[seqi].pos1, -seqio[seqi].cross, seqio[seqi].seq2,
+						        seqio[seqi].qual2
+						       );
+					}
+					else
+					{
+						fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t0\t%s\t%s",
+						        seqio[seqi].name_other, seqio[seqi].flag2, chr_names[seqio[seqi].chr_re2], seqio[seqi].pos2,
+						        seqio[seqi].qualc2, seqio[seqi].cigar2, tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].seq2,
+						        seqio[seqi].qual2
+						       );
+					}
+
+
+					if(seqio[seqi].xa_n_p2 > 0)
+					{
+						fprintf(fp_sam, "\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_p2; v_cnt_i++)
+							fprintf(fp_sam, "%s,%c%u,%s,%d;",chr_names[seqio[seqi].chr_res[v_cnt_i]], seqio[seqi].xa_d2s[v_cnt_i], seqio[seqi].sam_pos2s[v_cnt_i], seqio[seqi].cigar_p2s[v_cnt_i], seqio[seqi].lv_re2s[v_cnt_i]);
+					}
+#ifdef	PR_SINGLE
+					if(seqio[seqi].xa_n2 > 0)
+					{
+						if((seqio[seqi].xa_n_p2 == 0) && (seqio[seqi].xa_n2 > 0))	fprintf(fp_sam, "\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n2; v_cnt_i++)
+							fprintf(fp_sam, "%s,%c%u,%uM,%u;", chr_names[seqio[seqi].chr_res2[v_cnt_i]], seqio[seqi].xa_ds2[v_cnt_i], seqio[seqi].sam_poss2[v_cnt_i], seqio[seqi].read_length2, seqio[seqi].lv_res2[v_cnt_i]);
+
+					}
+#endif
+
+#ifdef	FIX_SA
+					if(seqio[seqi].xa_n_x2 > 0)
+					{
+						xa_n_p1_tmp = seqio[seqi].xa_n_p2;
+
+						fprintf(fp_sam, "\tSA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x2; v_cnt_i++)
+						{
+							fprintf(fp_sam, "%s,%u,%c,%s,%u,%d;", chr_names[seqio[seqi].chr_res_s2[v_cnt_i]], seqio[seqi].sam_pos2s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].xa_d2s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].cigar_p2s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].qualc2, seqio[seqi].lv_re2s[v_cnt_i + xa_n_p1_tmp]);
+
+						}
+
+					}
+#endif
+
+#ifdef	RD_FILED
+
+					fprintf(fp_sam, "\tNM:i:%u\tRG:Z:L2\n", seqio[seqi].nm2);
+
+#else
+
+					fprintf(fp_sam, "\tNM:i:%u\n", seqio[seqi].nm2);
+
+#endif
+
+				}
+				else
+				{
+					sprintf(h_chars, "%uH", seqio[seqi].length_h2);
+					if(seqio[seqi].chr_re1 == seqio[seqi].chr_re2)
+					{
+						fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s%s\t%c\t%"PRId64"\t%"PRId64"\t%s\t%s",
+						        seqio[seqi].name_other, seqio[seqi].flag2, chr_names[seqio[seqi].chr_re2], seqio[seqi].pos2,
+						        seqio[seqi].qualc2, seqio[seqi].cigar2, h_chars, tmp_pos_ch, seqio[seqi].pos1, -seqio[seqi].cross, seqio[seqi].seq2,
+						        seqio[seqi].qual2
+						       );
+					}
+					else
+					{
+						fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s%s\t%c\t%"PRId64"\t0\t%s\t%s",
+						        seqio[seqi].name_other, seqio[seqi].flag2, chr_names[seqio[seqi].chr_re2], seqio[seqi].pos2,
+						        seqio[seqi].qualc2, seqio[seqi].cigar2, h_chars, tmp_pos_ch, seqio[seqi].pos2, seqio[seqi].seq2,
+						        seqio[seqi].qual2
+						       );
+					}
+
+
+					if(seqio[seqi].xa_n_p2 > 0)
+					{
+						fprintf(fp_sam, "\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_p2; v_cnt_i++)
+						{
+							fprintf(fp_sam, "%s,%c%u,%s%s,%d;",chr_names[seqio[seqi].chr_res[v_cnt_i]], seqio[seqi].xa_d2s[v_cnt_i], seqio[seqi].sam_pos2s[v_cnt_i], seqio[seqi].cigar_p2s[v_cnt_i], h_chars, seqio[seqi].lv_re2s[v_cnt_i]);
+						}
+					}
+#ifdef	PR_SINGLE
+					if(seqio[seqi].xa_n2 > 0)
+					{
+						if((seqio[seqi].xa_n_p2 == 0) && (seqio[seqi].xa_n2 > 0))	fprintf(fp_sam, "\tXA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n2; v_cnt_i++)
+							fprintf(fp_sam, "%s,%c%u,%uM,%u;", chr_names[seqio[seqi].chr_res2[v_cnt_i]], seqio[seqi].xa_ds2[v_cnt_i], seqio[seqi].sam_poss2[v_cnt_i], seqio[seqi].read_length2, seqio[seqi].lv_res2[v_cnt_i]);
+
+					}
+#endif
+
+#ifdef	FIX_SA
+
+					if(seqio[seqi].xa_n_x2 > 0)
+					{
+						xa_n_p1_tmp = seqio[seqi].xa_n_p2;
+
+						fprintf(fp_sam, "\tSA:Z:");
+						for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x2; v_cnt_i++)
+						{
+							fprintf(fp_sam, "%s,%u,%c,%s,%u,%d;", chr_names[seqio[seqi].chr_res_s2[v_cnt_i]], seqio[seqi].sam_pos2s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].xa_d2s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].cigar_p2s[v_cnt_i + xa_n_p1_tmp], seqio[seqi].qualc2, seqio[seqi].lv_re2s[v_cnt_i + xa_n_p1_tmp]);
+
+						}
+					}
+#endif
+
+#ifdef	RD_FILED
+
+					fprintf(fp_sam, "\tNM:i:%u\tRG:Z:L2\n", seqio[seqi].nm2);
+
+#else
+
+					fprintf(fp_sam, "\tNM:i:%u\n", seqio[seqi].nm2);
+
+#endif
+				}
+
+
+#ifdef FIX_SV
+
+#ifndef	FIX_SA
+			
+				for(v_cnt_i = 0; v_cnt_i < seqio[seqi].xa_n_x2; v_cnt_i++)
+				{
+					if(seqio[seqi].xa_d2s[v_cnt_i + seqio[seqi].xa_n_p2] == '+')
+					{
+						flag_tmp = 2209;
+						seq_tmp = seqio[seqi].read_seq2;
+					}
+					else
+					{
+						flag_tmp = 2193;
+						read_tmp = seqio[seqi].read_seq2;
+						for(sam_seq_i = 0; sam_seq_i < seqio[seqi].read_length2; sam_seq_i++)
+							sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[read_tmp[sam_seq_i]] ^ 0X3];
+						sam_seq1[sam_seq_i] = '\0';
+						strrev1(sam_seq1);
+						seq_tmp = sam_seq1;
+					}
+
+					qual_tmp = seqio[seqi].qual2;
+
+					//seqio[seqi].read_seq1
+					//read_rev_buffer[seqi]
+
+					fprintf(fp_sam, "%s\t%u\t%s\t%"PRId64"\t%d\t%s\t%c\t%"PRId64"\t%d\t%s\t%s\tNM:i:%u\tRG:Z:L2\n",
+					        seqio[seqi].name_other, flag_tmp, chr_names[seqio[seqi].chr_res_s2[v_cnt_i]], seqio[seqi].sam_pos2s[v_cnt_i + seqio[seqi].xa_n_p2],
+					        seqio[seqi].qualc2, seqio[seqi].cigar_p2s[v_cnt_i + seqio[seqi].xa_n_p2], tmp_pos_ch, seqio[seqi].sam_pos2s[v_cnt_i + seqio[seqi].xa_n_p2], seqio[seqi].sam_pos2s[v_cnt_i + seqio[seqi].xa_n_p2] - seqio[seqi].pos1, seq_tmp,
+					        qual_tmp, seqio[seqi].lv_re2s[v_cnt_i + seqio[seqi].xa_n_p2]
+					       );
+
+				}
+#endif
+
+#endif
 			}
-			//printf("sv out 4\n");
-#endif				
+
+#endif
 		}
 
-#endif
 
 #ifdef	POST_DEBUG
 		printf("print end\n");
@@ -1592,14 +2101,15 @@ int seed_ali()
 
 
 	dtime = omp_get_wtime() - dtime;
-	printf("%lf seconds is used in mapping\n", dtime);
+	fprintf(stderr, "%lf seconds is used in mapping\n", dtime);
 	fflush(stdout);
 
 #ifdef	R_W_LOCK
 	pthread_rwlock_destroy(&rwlock);
 #endif
 
-	fclose(fp_sam);
+	if(flag_std == 0)
+		fclose(fp_sam);
 
 	kseq_destroy(seq1);
 	gzclose(fp1);
@@ -1612,7 +2122,7 @@ int seed_ali()
 #endif
 
 #ifdef	PTHREAD_USE
-	printf("free memory\n");
+	fprintf(stderr, "free memory\n");
 
 	if(g_low != NULL)	free(g_low);
 	if(r_low != NULL)	free(r_low);
@@ -2081,15 +2591,15 @@ int seed_ali()
 	for(r_i = 0; r_i < thread_n; r_i++)
 		if(orders1[r_i] != NULL)	free(orders1[r_i]);
 	if(orders1 != NULL)	free(orders1);
-	
+
 	for(r_i = 0; r_i < thread_n; r_i++)
 		if(orders2[r_i] != NULL)	free(orders2[r_i]);
 	if(orders2 != NULL)	free(orders2);
-	
+
 	for(r_i = 0; r_i < thread_n; r_i++)
 		if(dms1[r_i] != NULL)	free(dms1[r_i]);
 	if(dms1 != NULL)	free(dms1);
-	
+
 	for(r_i = 0; r_i < thread_n; r_i++)
 		if(dms2[r_i] != NULL)	free(dms2[r_i]);
 	if(dms2 != NULL)	free(dms2);
@@ -2647,7 +3157,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 #endif
 
 	uint8_t qual_flag = 0;
-	
+
 #ifdef	REDUCE_ANCHOR
 	int ls = 0;
 	int rs = 0;
@@ -2660,18 +3170,25 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 	uint16_t op_mask[MAX_REDUCE_ANCHOR_NUM];
 	uint16_t ops_mask[MAX_REDUCE_ANCHOR_NUM];
 #endif
-	
+
 #ifdef	ANCHOR_LV_S
 	int16_t s_offset_l = 0;
 	int16_t s_offset_r = 0;
 #endif
-	
+
 	uint64_t* op_vector_seq1_tmp = NULL;
 	uint16_t v_cnt_i_tmp = 0;
 #ifdef	FIX_SV
 	uint16_t tra_i_n = 0;
+	uint8_t sv_add = 0;
 #endif
-	
+
+#ifdef FIX_SA
+	uint8_t op_rc_tmp = 0;
+	uint16_t sv_s_len = 0;
+	uint16_t sv_s_len_p = 0;
+#endif
+
 #ifndef	R_W_LOCK
 	for(seqi = 0; seqi < seqn; seqi++)
 #else
@@ -2689,8 +3206,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 		seqi = read_seq_core;
 #endif
 
-		//printf("%u\n", seqi);
-		
 		read_length1 = seqio[seqi].read_length1;
 		read_length2 = seqio[seqi].read_length2;
 
@@ -2699,7 +3214,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 		if((insert_dis < read_length1) || (insert_dis < read_length2))
 		{
-			printf("Input error: wrong -u or -f\n");
+			fprintf(stderr, "Input error: wrong -u or -f\n");
 			exit(1);
 		}
 
@@ -2959,8 +3474,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 		rep_go[tid] = 1;
 #endif
 
-		//printf("while before\n");
-			
 		cir_n = 1;
 		while(cir_n <= cir_fix_n)
 		{
@@ -5593,9 +6106,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 			cir_n++;
 		}
 
-		
-		//printf("rep before\n");
-			
 #ifdef	PAIR_RANDOM
 
 #ifdef	PR_COV_FILTER
@@ -5638,9 +6148,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 			max_sets_n[1][1] = max_sets_n[0][0];
 			max_sets_n[1][0] = max_sets_n[0][1];
 #endif
-			
-			//printf("anchor begin\n");
-			
+
 			for(rc_i = 0; rc_i < 2; rc_i++)
 			{
 				for(un_ii = 0; un_ii < 2; un_ii++)
@@ -6196,7 +6704,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									else
 									{
 #ifdef	ANCHOR_LV_S
-										printf("s_off: %u %u\n", s_offset_l, s_offset_r);
 										if((s_offset_l + s_offset_r) < ((float )read_length * ANCHOR_LV_S_FLOAT))
 											dm1 = lv_dmt1 + pound_mis;
 										else	dm1 = MAX_EDIT_SCORE;
@@ -6645,7 +7152,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									else
 									{
 #ifdef	ANCHOR_LV_S
-										//printf("s_off_2: %u %u\n", s_offset_l, s_offset_r);
 										if((s_offset_l + s_offset_r) < ((float )read_length * ANCHOR_LV_S_FLOAT))
 											dm1 = lv_dmt1 + pound_mis;
 										else	dm1 = MAX_EDIT_SCORE;
@@ -6666,15 +7172,15 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									//add edit distance
 								}
 							}
-							
-							
+
+
 							/*
 								x = posi;
-						low = 0;
-						high = chr_file_n - 1;
+													low = 0;
+													high = chr_file_n - 1;
 
-						while ( low <= high )
-						{
+													while ( low <= high )
+													{
 							mid = (low + high) >> 1;
 							if(x < (chr_end_n[mid]))
 							{
@@ -6690,16 +7196,16 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								break;
 							}
 							chr_re = low;
-						}
+													}
 
-						posi = x - chr_end_n[chr_re - 1] + 1;
+													posi = x - chr_end_n[chr_re - 1] + 1;
 
-						printf("to add: %u %u %d %d %d rc: %u\n", chr_re, posi, dm1, dm_op[tid], dm_ops[tid],((rc_i << 1) + un_ii));
-						
-						posi = x;
-						*/
-						
-						
+													fprintf(stderr, "to add: %u %u %d %d %d rc: %u\n", chr_re, posi, dm1, dm_op[tid], dm_ops[tid],((rc_i << 1) + un_ii));
+
+													posi = x;
+								*/		
+
+
 							if(dm1 < dm_op[tid])
 							{
 #ifdef	DM_COPY_SINGLE
@@ -6794,8 +7300,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 #ifdef	PR_SINGLE
 			if(seed_re_r[tid] == 1)
 			{
-				//printf("PR_SINGLE: %u %u %u\n", min_mis[tid], dm_op[tid], dm_ops[tid]);
-				
 				if(min_mis[tid] <= dm_op[tid])
 				{
 					if(min_mis[tid] < dm_op[tid])
@@ -6850,30 +7354,25 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								}
 							}
 				}
-				//printf("PR_SINGLE: %u %u\n", v_cnt, vs_cnt);
 			}
 #endif
 
-			//printf("anchor out: %u\n", v_cnt);
-			
 			if(v_cnt > 0)
 			{
 #ifdef	ALTER_DEBUG_ANCHOR
 				if(v_cnt > 1)	qsort(seed_length_arr[tid], v_cnt, sizeof(seed_length_array), compare_seed_length);
 #endif
-				
+
 #ifdef	REDUCE_ANCHOR
 
 				tra1_i = 0;
 				tra2_i = 0;
 				anchor_n1 = 0;
 				anchor_n2 = 0;
-				
+
 				memset(op_mask, 0, v_cnt << 1);
 				memset(ops_mask, 0, vs_cnt << 1);
-				
-				//printf("1\n");
-				
+
 				for(va_cnt_i = 0; va_cnt_i < v_cnt; va_cnt_i++)
 				{
 #ifdef	ALTER_DEBUG_ANCHOR
@@ -6890,7 +7389,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						rcs1[tid][anchor_n1] = op_rc[tid][tra_i];
 						dms1[tid][anchor_n1] = dm_op[tid];
 						orders1[tid][anchor_n1] = tra_i;
-						
+
 						anchor_n1++;
 					}
 					else
@@ -6901,13 +7400,11 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						rcs2[tid][anchor_n2] = op_rc[tid][tra_i];
 						dms2[tid][anchor_n2] = dm_op[tid];
 						orders2[tid][anchor_n2] = tra_i;
-						
+
 						anchor_n2++;
 					}
 				}
-				
-				//printf("2: %u %u\n", anchor_n1, anchor_n2);
-				
+
 				for(tra_i = 0; tra_i < vs_cnt; tra_i++)
 				{
 					if((ops_rc[tid][tra_i] == 0) || (ops_rc[tid][tra_i] == 3))
@@ -6918,7 +7415,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						rcs1[tid][anchor_n1] = ops_rc[tid][tra_i];
 						dms1[tid][anchor_n1] = dm_ops[tid];
 						orders1[tid][anchor_n1] = tra_i + MAX_REDUCE_ANCHOR_NUM;
-						
+
 						anchor_n1++;
 					}
 					else
@@ -6929,15 +7426,12 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						rcs2[tid][anchor_n2] = ops_rc[tid][tra_i];
 						dms2[tid][anchor_n2] = dm_ops[tid];
 						orders2[tid][anchor_n2] = tra_i + MAX_REDUCE_ANCHOR_NUM;
-						
+
 						anchor_n2++;
 					}
 				}
-
 #endif
-				
-				//printf("3\n");
-				
+
 #ifdef	ANCHOR_HASH_ALI
 				for(anchor_hash_i = 0; anchor_hash_i < 4; anchor_hash_i++)
 				{
@@ -7023,16 +7517,14 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				}
 #endif
 
-				//printf("4\n");
-				
 				v_cnt_i = 0;
 #ifdef	ALTER_DEBUG_ANCHOR
 				if(v_cnt > 1)	v_cnt_i = seed_length_arr[tid][v_cnt_i].index;
 #endif
-				
+
 #ifdef	REDUCE_ANCHOR
 				op_mask[v_cnt_i] = 1;
-#endif		
+#endif
 				x = op_vector_pos1[tid][v_cnt_i];
 				low = 0;
 				high = chr_file_n - 1;
@@ -7057,9 +7549,11 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				}
 
 				sam_pos1 = op_vector_pos1[tid][v_cnt_i] - chr_end_n[chr_re1 - 1] + 1;
-				
-				//printf("op\n");
-				
+
+#ifdef	FIX_SA
+				op_rc_tmp = op_rc[tid][v_cnt_i];
+#endif
+
 				if(op_rc[tid][v_cnt_i] == 0)
 				{
 #ifdef	CHAR_CP
@@ -7228,7 +7722,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						m_n_f = 0;
 						m_n_b = read_length_1 - pound_pos_1_f;
 						m_m_n = s_r_o_r - s_r_o_l - 1;
-						//printf("1\n");
 					}
 					else if(pound_pos_1_r <= s_r_o_l + 1)     //5
 					{
@@ -7239,7 +7732,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						m_n_f = pound_pos_1_r;
 						m_n_b = 0;
 						m_m_n = s_r_o_r - s_r_o_l - 1;
-						//printf("5\n");
 					}
 					else if((pound_pos_1_f <= s_r_o_l + 1) && (pound_pos_1_r >= s_r_o_r))     //2
 					{
@@ -7250,7 +7742,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						m_n_f = 0;
 						m_n_b = 0;
 						m_m_n = pound_pos_1_r - pound_pos_1_f;
-						//printf("2\n");
 					}
 					else if((pound_pos_1_f > s_r_o_l + 1) && (pound_pos_1_f < s_r_o_r))     //3
 					{
@@ -7261,7 +7752,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						m_n_f = 0;
 						m_n_b = 0;
 						m_m_n = read_length_1 - s_r_o_l - 1;
-						//printf("3\n");
 					}
 					else     //4
 					{
@@ -7272,7 +7762,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						m_n_f = 0;
 						m_n_b = 0;
 						m_m_n = s_r_o_r;
-						//printf("4\n");
 					}
 #ifdef	QUAL_FILT_SINGLE_OUT
 					for(bit_char_i = lv_up_right, read_b_i = 0; bit_char_i >= lv_up_left; bit_char_i--, read_b_i++)
@@ -7326,8 +7815,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 #endif
 #endif
 
-					//printf("single1\n");
-					
 					//deal with front and back lv cigar
 					strncpy(str_o, cigarBuf1, f_cigarn);
 					s_o = 0;
@@ -7356,13 +7843,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						pchl = strlen(pch);
 
 					snt = 0;
-					
-					//printf("m_n_f: %u\n", m_n_f);
-					//printf("%d %d %d %d\n", lv_up_left, lv_up_right, lv_down_left, lv_down_right);
-					//printf("cg1: %s cg2: %s\n", str_o, b_cigar);
-					
-					//printf("%s\n", cigar_p1);
-					
+
 #ifdef	CIGAR_S_MODIFY
 					if(lv_up_left)
 					{
@@ -7391,8 +7872,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						else	m_m_n += m_n_f;
 					}
 #endif
-					//printf("%s\n", cigar_p1);
-					
+
 					if((lv_up_right >= lv_up_left) && (lv_down_right > lv_down_left))   //(op_dm_l1[tid][v_cnt_i] != -1) && (op_dm_r1[tid][v_cnt_i] != read_length1)
 					{
 						if((f_cigar[f_cigarn - 1] == 'M') && (b_cigar[pchl] == 'M'))
@@ -7480,9 +7960,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						sn = sprintf(cigar_p1 + snt, "%uM", m_m_n);
 						snt += sn;
 					}
-					
-					//printf("%s\n", cigar_p1);
-					
+
 #ifdef	CIGAR_S_MODIFY
 					if(lv_down_right < read_length_1)
 					{
@@ -7520,8 +7998,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					}
 #endif
 
-					//printf("%s\n", cigar_p1);
-					
 #ifdef	CIGAR_LEN_ERR
 					cigar_len = 0;
 					s_o_tmp = 0;
@@ -7544,9 +8020,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 					if(read_length_1 != cigar_len)
 					{
-						//printf("end1 single cigar lenth: %s %u\n", cigar_p1, read_length_1);
-						//fflush(stdout);
-
 						if(read_length_1 < cigar_len)
 						{
 							cigar_len_re = cigar_len_tmp - (cigar_len - read_length_1);
@@ -7561,11 +8034,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						}
 					}
 #endif
-					//printf("%s\n", cigar_p1);
-					
-					//printf("single cigar finish\n");
-					
-					//sprintf(cigar_p1 + snt, "\0");
 				}
 #ifdef	NO_S_OFF
 				s_offset1 = 0;
@@ -7649,12 +8117,8 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					r_b_v = max_right;
 				}
 
-				//printf("single buffer: %u %u %u\n", max_seed_length, sam_pos1, sam_pos2);
-				
 				if((buffer_i > 0) && (max_seed_length > anchor_seed_length_thr))
 				{
-					//printf("anchor one\n");
-					
 					qsort(anchor_seed_buffer[tid], buffer_i, sizeof(anchor_seed), comepare_anchor_seed);
 
 					//LV
@@ -7815,6 +8279,10 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							}
 						}
 #ifdef	CIGAR_LEN_ERR
+
+#ifdef FIX_SA
+						sv_s_len_p = 0;
+#endif
 						cigar_len = 0;
 						s_o_tmp = 0;
 						strncpy(cigar_tmp, cigar_p2, snt);
@@ -7826,19 +8294,26 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							pchl_tmp = strlen(pch_tmp);
 							s_o_tmp += (pchl_tmp + 1);
 
+							
 							if(cigar_p2[s_o_tmp - 1] != 'D')
 							{
 								cigar_len_tmp = atoi(pch_tmp);
 								cigar_len += cigar_len_tmp;
+#ifdef FIX_SA
+								if(cigar_p2[s_o_tmp - 1] == 'S')
+									sv_s_len_p += cigar_len_tmp;
+#endif
+								if(cigar_p2[s_o_tmp - 1] == 'I')
+									dm_l2 += cigar_len_tmp;
+							}else{
+								cigar_len_tmp = atoi(pch_tmp);
+								dm_l2 += cigar_len_tmp;
 							}
 							pch_tmp = strtok_r(NULL, "DMIS", &saveptr_tmp);
 						}
 
 						if(read_length_2 != cigar_len)
 						{
-							//printf("end2 single cigar lenth: %s %u %u\n", cigar_p2, cigar_len, read_length_2);
-							//fflush(stdout);
-
 							if(read_length_2 < cigar_len)
 							{
 								cigar_len_re = cigar_len_tmp - (cigar_len - read_length_2);
@@ -7853,7 +8328,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							}
 						}
 #endif
-						//sprintf(cigar_p2 + snt, "\0");
 					}
 #ifdef	NO_S_OFF
 					s_offset2 = 0;
@@ -7867,8 +8341,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 #ifdef	REDUCE_ANCHOR
 
-					//printf("pick one\n");
-					
 					if((op_rc[tid][v_cnt_i] == 0) || (op_rc[tid][v_cnt_i] == 3))
 					{
 						other_end_flag = 0;
@@ -7891,7 +8363,9 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									tra2_i++;
 									break;
 								}
-							}else{
+							}
+							else
+							{
 								v_cnt_i_tmp = orders2[tid][tra2_i];
 								if(op_mask[v_cnt_i_tmp] == 0)
 								{
@@ -7901,9 +8375,9 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									tra2_i++;
 									break;
 								}
-							}	
+							}
 							tra2_i++;
-						}	
+						}
 					}
 					else
 					{
@@ -7925,9 +8399,11 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									ops_mask[v_cnt_i_tmp] = 1;
 									tra1_i++;
 									other_end_flag = 1;
-									break;	
+									break;
 								}
-							}else{
+							}
+							else
+							{
 								v_cnt_i_tmp = orders1[tid][tra1_i];
 								op_vector_seq1_tmp = op_vector_seq1[tid][v_cnt_i_tmp];
 								if(op_mask[v_cnt_i_tmp] == 1)
@@ -7935,19 +8411,15 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									op_mask[v_cnt_i_tmp] = 1;
 									tra1_i++;
 									other_end_flag = 1;
-									break;	
+									break;
 								}
-							}	
+							}
 							tra1_i++;
 						}
 					}
 
-					//printf("single other_end_flag\n");
-					
 					if(other_end_flag)
 					{
-						//printf("choose one\n");
-
 						x = sam_pos2;
 						low = 0;
 						high = chr_file_n - 1;
@@ -8402,6 +8874,10 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 #endif
 
 #ifdef	CIGAR_LEN_ERR
+
+#ifdef FIX_SA
+							sv_s_len_p = 0;
+#endif
 							cigar_len = 0;
 							s_o_tmp = 0;
 							strncpy(cigar_tmp, cigar_p2, snt);
@@ -8417,15 +8893,16 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								{
 									cigar_len_tmp = atoi(pch_tmp);
 									cigar_len += cigar_len_tmp;
+#ifdef FIX_SA
+									if(cigar_p2[s_o_tmp - 1] == 'S')
+										sv_s_len_p += cigar_len_tmp;
+#endif
 								}
 								pch_tmp = strtok_r(NULL, "DMIS", &saveptr_tmp);
 							}
 
 							if(read_length_1 != cigar_len)
 							{
-								//printf("end1 single cigar lenth: %s %u\n", cigar_p2, read_length_1);
-								//fflush(stdout);
-
 								if(read_length_1 < cigar_len)
 								{
 									cigar_len_re = cigar_len_tmp - (cigar_len - read_length_1);
@@ -8440,7 +8917,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								}
 							}
 #endif
-							//sprintf(cigar_p2 + snt, "\0");
 						}
 #ifdef	NO_S_OFF
 						s_offset1 = 0;
@@ -8469,17 +8945,17 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 #endif
 					chr_re2 = chr_re1;
 					ksw_re = 0;
-					
-#endif
-				}
 
 #endif
-				//printf("chr_re: %u %u\n", chr_re1, chr_re2);
-				
-				//printf("%s %s\n", cigar_p1, cigar_p2);
-				
+				}
+#endif
+
 				if(op_rc[tid][v_cnt_i] == 0)
 				{
+#ifdef	FIX_SV
+					sv_add = 2;
+#endif
+
 #ifdef	CHAR_CP
 					strcpy(sam_seq1, seqio[seqi].read_seq1);
 
@@ -8488,31 +8964,34 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					{
 						if(rcs == 2)
 							strcpy(sam_seq2, seqio[seqi].read_seq2);
-						else{
+						else
+						{
 							for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
 								sam_seq2[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
 							sam_seq2[sam_seq_i] = '\0';
 
 							strrev1(sam_seq2);
 						}
-						
+
 						//if((rcs == 0) || (rcs == 3))	printf("Error: %u\n", rcs);
-						
-					}else{
+
+					}
+					else
+					{
 						for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
 							sam_seq2[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
 						sam_seq2[sam_seq_i] = '\0';
 
 						strrev1(sam_seq2);
 					}
-#else		
+#else
 					for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
 						sam_seq2[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
 					sam_seq2[sam_seq_i] = '\0';
 
 					strrev1(sam_seq2);
-#endif	
-			
+#endif
+
 #endif
 					seq1p = sam_seq1;
 					if(ksw_re == 1)
@@ -8524,20 +9003,27 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							{
 								sam_flag1 = 65;
 								sam_flag2 = 129;
-							}else{
+							}
+							else
+							{
 								sam_flag1 = 97;
 								sam_flag2 = 145;
 							}
-						}else{
+						}
+						else
+						{
 							if((other_end_flag) && (rcs == 2))
 							{
 								sam_flag1 = 67;
 								sam_flag2 = 131;
-							}else{
+							}
+							else
+							{
 								sam_flag1 = 99;
 								sam_flag2 = 147;
 							}
 						}
+
 						seq2p = sam_seq2;
 					}
 					else
@@ -8552,7 +9038,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						sam_pos2 = 0;
 						chr_re2 = chr_file_n;
 #endif
-						
+
 					}
 					cp1 = cigar_p1;
 					cp2 = cigar_p2;
@@ -8562,6 +9048,10 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				}
 				else if(op_rc[tid][v_cnt_i] == 1)
 				{
+#ifdef	FIX_SV
+					sv_add = 1;
+#endif
+
 #ifdef	CHAR_CP
 					for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
 						sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
@@ -8573,23 +9063,26 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					{
 						if(rcs == 0)
 							strcpy(sam_seq2, seqio[seqi].read_seq1);
-						else{
+						else
+						{
 							for(sam_seq_i = 0; sam_seq_i < read_length1; sam_seq_i++)
 								sam_seq2[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq1[sam_seq_i]] ^ 0X3];
 							sam_seq2[sam_seq_i] = '\0';
 
 							strrev1(sam_seq2);
 						}
-						
+
 						//if((rcs == 1) || (rcs == 2))	printf("Error: %u\n", rcs);
-						
-					}else{
+
+					}
+					else
+					{
 						strcpy(sam_seq2, seqio[seqi].read_seq1);
 					}
-#else	
+#else
 					strcpy(sam_seq2, seqio[seqi].read_seq1);
 #endif
-					
+
 #endif
 					seq2p = sam_seq1;
 					if(ksw_re == 1)
@@ -8603,28 +9096,33 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						sam_pos1 = sam_pos1 ^ sam_pos2;
 
 						sam_cross = sam_pos2 + read_length2 - sam_pos1;
-					
+
 						if((sam_cross > insert_dis + devi) || (sam_cross < insert_dis - devi) || (chr_re1 != chr_re2))
 						{
 							if((other_end_flag) && (rcs != 0))
 							{
 								sam_flag1 = 113;
 								sam_flag2 = 177;
-							}else{
+							}
+							else
+							{
 								sam_flag1 = 97;
 								sam_flag2 = 145;
 							}
-						}else{
+						}
+						else
+						{
 							if((other_end_flag) && (rcs != 0))
 							{
 								sam_flag1 = 115;
 								sam_flag2 = 179;
-							}else{
+							}
+							else
+							{
 								sam_flag1 = 99;
 								sam_flag2 = 147;
 							}
 						}
-						
 						seq1p = sam_seq2;
 					}
 					else
@@ -8651,25 +9149,32 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				}
 				else if(op_rc[tid][v_cnt_i] == 2)
 				{
+#ifdef	FIX_SV
+					sv_add = 1;
+#endif
+
 #ifdef	CHAR_CP
 					strcpy(sam_seq1, seqio[seqi].read_seq2);
-					
+
 #ifdef	REDUCE_ANCHOR
 					if(other_end_flag)
 					{
 						if(rcs == 0)
 							strcpy(sam_seq2, seqio[seqi].read_seq1);
-						else{
+						else
+						{
 							for(sam_seq_i = 0; sam_seq_i < read_length1; sam_seq_i++)
 								sam_seq2[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq1[sam_seq_i]] ^ 0X3];
 							sam_seq2[sam_seq_i] = '\0';
 
 							strrev1(sam_seq2);
 						}
-						
+
 						//if((rcs == 1) || (rcs == 2))	printf("Error: %u\n", rcs);
-						
-					}else{
+
+					}
+					else
+					{
 						for(sam_seq_i = 0; sam_seq_i < read_length1; sam_seq_i++)
 							sam_seq2[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq1[sam_seq_i]] ^ 0X3];
 						sam_seq2[sam_seq_i] = '\0';
@@ -8701,21 +9206,27 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							{
 								sam_flag1 = 65;
 								sam_flag2 = 129;
-							}else{
+							}
+							else
+							{
 								sam_flag1 = 81;
 								sam_flag2 = 161;
 							}
-						}else{
+						}
+						else
+						{
 							if((other_end_flag) && (rcs == 0))
 							{
 								sam_flag1 = 67;
 								sam_flag2 = 131;
-							}else{
+							}
+							else
+							{
 								sam_flag1 = 83;
 								sam_flag2 = 163;
 							}
 						}
-						
+
 						seq1p = sam_seq2;
 					}
 					else
@@ -8727,7 +9238,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						seq1p = seqio[seqi].read_seq1;
 
 						qual_flag = 1;
-#ifdef	SAMTOOLS_BUG					
+#ifdef	SAMTOOLS_BUG
 						sam_pos2 = sam_pos1;
 						sam_pos1 = 0;
 						chr_re2 = chr_re1;
@@ -8742,33 +9253,40 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				}
 				else
 				{
+#ifdef	FIX_SV
+					sv_add = 2;
+#endif
+
 #ifdef	CHAR_CP
 					for(sam_seq_i = 0; sam_seq_i < read_length1; sam_seq_i++)
 						sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq1[sam_seq_i]] ^ 0X3];
 					sam_seq1[sam_seq_i] = '\0';
 					strrev1(sam_seq1);
-						
+
 #ifdef	REDUCE_ANCHOR
 					if(other_end_flag)
 					{
 						if(rcs == 2)
 							strcpy(sam_seq2, seqio[seqi].read_seq2);
-						else{
+						else
+						{
 							for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
 								sam_seq2[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
 							sam_seq2[sam_seq_i] = '\0';
 							strrev1(sam_seq2);
 						}
-						
+
 						//if((rcs == 0) || (rcs == 3))	printf("Error: %u\n", rcs);
-						
-					}else{
+
+					}
+					else
+					{
 						strcpy(sam_seq2, seqio[seqi].read_seq2);
 					}
 #else
 					strcpy(sam_seq2, seqio[seqi].read_seq2);
-#endif	
-	
+#endif
+
 #endif
 					seq1p = sam_seq1;
 					seq2p = sam_seq2;
@@ -8781,17 +9299,23 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							{
 								sam_flag1 = 113;
 								sam_flag2 = 177;
-							}else{
+							}
+							else
+							{
 								sam_flag1 = 81;
 								sam_flag2 = 161;
 							}
-						}else{
-							
+						}
+						else
+						{
+
 							if((other_end_flag) && (rcs != 2))
 							{
 								sam_flag1 = 115;
 								sam_flag2 = 179;
-							}else{
+							}
+							else
+							{
 								sam_flag1 = 83;
 								sam_flag2 = 163;
 							}
@@ -8802,7 +9326,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						sam_flag1 = 89;
 						sam_flag2 = 181;
 						sam_cross = 0;
-						
+
 						qual_flag = 2;
 #ifdef	SAMTOOLS_BUG
 						sam_pos2 = 0;
@@ -8816,33 +9340,33 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					seqio[seqi].nm2 = dm_l2 + dm_r2;
 				}
 
-				//printf("single seqio\n");
-				
 #ifdef	OUTPUT_ARR
-				
-				//printf("chr_re: %u %u\n", chr_re1, chr_re2);
-				
+
 				seqio[seqi].flag1 = sam_flag1;
 				seqio[seqi].flag2 = sam_flag2;
 				//seqio[seqi].chr_re = chr_re;
 				seqio[seqi].chr_re1 = chr_re1;
 				seqio[seqi].chr_re2 = chr_re2;
-	
+
 				if(sam_pos1 <= 0)
 				{
 					sam_pos1 = 1;
-				}else{
+				}
+				else
+				{
 					if((sam_pos1 + read_length1 - 1) > (chr_end_n[chr_re1] - chr_end_n[chr_re1 - 1]))
 						sam_pos1 -= read_length1;
-				}					
+				}
 				if(sam_pos2 <= 0)
 				{
 					sam_pos2 = 1;
-				}else{
+				}
+				else
+				{
 					if((sam_pos2 + read_length2 - 1) > (chr_end_n[chr_re2] - chr_end_n[chr_re2 - 1]))
 						sam_pos2 -= read_length2;
-				} 
-				
+				}
+
 				seqio[seqi].pos1 = sam_pos1;
 				seqio[seqi].pos2 = sam_pos2;
 				seqio[seqi].cross = sam_cross;
@@ -8872,6 +9396,17 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 					strrev1(qual1_buffer[seqi]);
 				}
+				else if((sam_flag1 == 113) || (sam_flag1 == 115))
+				{
+					strcpy(read_rev_buffer[seqi], seq1p);
+					read_rev_buffer[seqi][read_length1] = '\0';
+
+					strcpy(read_rev_buffer_1[seqi], seq2p);
+					read_rev_buffer_1[seqi][read_length2] = '\0';
+
+					seqio[seqi].seq1 = read_rev_buffer[seqi];
+					seqio[seqi].seq2 = read_rev_buffer_1[seqi];
+				}
 				else
 				{
 					seqio[seqi].seq1 = seqio[seqi].read_seq1;
@@ -8893,7 +9428,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 #ifdef	REDUCE_ANCHOR
 				if(op_mask[v_cnt_i] == 1)	continue;
-				
+
 				op_mask[v_cnt_i] = 1;
 #endif
 				x = op_vector_pos1[tid][v_cnt_i];
@@ -8919,8 +9454,13 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					chr_re = low;
 				}
 
-				sam_pos1 = op_vector_pos1[tid][v_cnt_i] - chr_end_n[chr_re - 1] + 1;
-
+				if(chr_re)
+					sam_pos1 = op_vector_pos1[tid][v_cnt_i] - chr_end_n[chr_re - 1] + 1;
+				else
+				{
+					sam_pos1 = op_vector_pos1[tid][v_cnt_i];
+					chr_re = 1;
+				}
 				//chr_res[tid][xa_i] = chr_re;
 
 				if(op_rc[tid][v_cnt_i] == 0)
@@ -9408,9 +9948,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 					if(read_length_1 != cigar_len)
 					{
-						//printf("end1 single xa cigar lenth: %s %u\n", cigar_p1, read_length_1);
-						//fflush(stdout);
-
 						if(read_length_1 < cigar_len)
 						{
 							cigar_len_re = cigar_len_tmp - (cigar_len - read_length_1);
@@ -9426,7 +9963,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					}
 #endif
 
-					//sprintf(cigar_p1 + snt, "\0");
 				}
 #ifdef	NO_S_OFF
 				s_offset1 = 0;
@@ -9437,7 +9973,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 #ifdef	REDUCE_ANCHOR
 				other_end_flag = 0;
 #endif
-	
+
 #ifdef	ANCHOR_HASH_ALI
 
 				buffer_i = 0;
@@ -9698,9 +10234,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 						if(read_length_2 != cigar_len)
 						{
-							//printf("end single2 xa cigar lenth: %s %u\n", cigar_p2, read_length_2);
-							//fflush(stdout);
-
 							if(read_length_2 < cigar_len)
 							{
 								cigar_len_re = cigar_len_tmp - (cigar_len - read_length_2);
@@ -9716,7 +10249,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						}
 #endif
 
-						//sprintf(cigar_p2 + snt, "\0");
 					}
 #ifdef	NO_S_OFF
 					s_offset2 = 0;
@@ -9730,8 +10262,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				{
 #ifdef	REDUCE_ANCHOR
 
-					//printf("else end\n", tra2_i, anchor_n2);
-					
 					if((op_rc[tid][v_cnt_i] == 0) || (op_rc[tid][v_cnt_i] == 3))
 					{
 						other_end_flag = 0;
@@ -9753,7 +10283,9 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									tra2_i++;
 									break;
 								}
-							}else{
+							}
+							else
+							{
 								v_cnt_i_tmp = orders2[tid][tra2_i];
 								op_vector_seq1_tmp = op_vector_seq1[tid][v_cnt_i_tmp];
 								if(op_mask[v_cnt_i_tmp] == 0)
@@ -9787,8 +10319,10 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									tra1_i++;
 									other_end_flag = 1;
 									break;
-								}	
-							}else{
+								}
+							}
+							else
+							{
 								v_cnt_i_tmp = orders1[tid][tra1_i];
 								op_vector_seq1_tmp = op_vector_seq1[tid][v_cnt_i_tmp];
 								if(op_mask[v_cnt_i_tmp] == 0)
@@ -9802,13 +10336,9 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							tra1_i++;
 						}
 					}
-					
-//printf("other end before: %u\n", other_end_flag);
 
 					if(other_end_flag)
 					{
-						//printf("other end\n");
-						
 						x = sam_pos2;
 						low = 0;
 						high = chr_file_n - 1;
@@ -10285,9 +10815,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 							if(read_length_1 != cigar_len)
 							{
-								//printf("end1 single cigar lenth: %s %u\n", cigar_p2, read_length_1);
-								//fflush(stdout);
-
 								if(read_length_1 < cigar_len)
 								{
 									cigar_len_re = cigar_len_tmp - (cigar_len - read_length_1);
@@ -10302,7 +10829,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								}
 							}
 #endif
-							//sprintf(cigar_p2 + snt, "\0");
 						}
 #ifdef	NO_S_OFF
 						s_offset1 = 0;
@@ -10320,7 +10846,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						strcpy(cigar_p2, "*");
 #endif
 						ksw_re = 0;
-						lv_re2f = 0;	
+						lv_re2f = 0;
 
 					}
 #else
@@ -10331,12 +10857,10 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					strcpy(cigar_p2, "*");
 #endif
 					ksw_re = 0;
-					lv_re2f = 0;	
+					lv_re2f = 0;
 #endif
 				}
 #endif
-
-				//printf("v_cnt end\n");
 
 				if(op_rc[tid][v_cnt_i] == 0)
 				{
@@ -10349,7 +10873,8 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					{
 						if(rcs == 2)	xa_d2s[tid][xa_i_2] = '+';
 						else	xa_d2s[tid][xa_i_2] = '-';
-					}else	xa_d2s[tid][xa_i_2] = '-';
+					}
+					else	xa_d2s[tid][xa_i_2] = '-';
 #else
 					xa_d2s[tid][xa_i_2] = '-';
 #endif
@@ -10373,12 +10898,13 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					{
 						if(rcs == 0)	xa_d1s[tid][xa_i_1] = '+';
 						else	xa_d1s[tid][xa_i_1] = '-';
-					}else	xa_d1s[tid][xa_i_1] = '+';
+					}
+					else	xa_d1s[tid][xa_i_1] = '+';
 #else
 					xa_d1s[tid][xa_i_1] = '+';
 #endif
 					xa_d2s[tid][xa_i_2] = '-';
-					
+
 					lv_re1b = lv_re2f;
 					lv_re2b = lv_re1f;
 				}
@@ -10393,18 +10919,19 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 					cp1 = cigar_p2;
 					cp2 = cigar_p1;
-					
+
 #ifdef	REDUCE_ANCHOR
 					if(other_end_flag)
 					{
 						if(rcs == 0)	xa_d1s[tid][xa_i_1] = '+';
 						else	xa_d1s[tid][xa_i_1] = '-';
-					}else	xa_d1s[tid][xa_i_1] = '-';
+					}
+					else	xa_d1s[tid][xa_i_1] = '-';
 #else
 					xa_d1s[tid][xa_i_1] = '-';
 #endif
 					xa_d2s[tid][xa_i_2] = '+';
-					
+
 					lv_re1b = lv_re2f;
 					lv_re2b = lv_re1f;
 
@@ -10413,14 +10940,15 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				{
 					cp1 = cigar_p1;
 					cp2 = cigar_p2;
-					
+
 					xa_d1s[tid][xa_i_1] = '-';
 #ifdef	REDUCE_ANCHOR
 					if(other_end_flag)
 					{
 						if(rcs == 2)	xa_d2s[tid][xa_i_2] = '+';
 						else	xa_d2s[tid][xa_i_2] = '-';
-					}else	xa_d2s[tid][xa_i_2] = '+';
+					}
+					else	xa_d2s[tid][xa_i_2] = '+';
 #else
 					xa_d2s[tid][xa_i_2] = '+';
 #endif
@@ -10430,14 +10958,15 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 				if(sam_pos1 <= 0) sam_pos1 = 1;
 				if(sam_pos2 <= 0) sam_pos2 = 1;
-				
+
+				/*
 				if((sam_flag1 == 117) || (sam_flag1 == 69))
 				{
-#ifdef	PICARD_BUG
+				#ifdef	PICARD_BUG
 					//strcpy(cigar_p1s[tid][xa_i], cp2);
-#else
+				#else
 					//strcpy(cigar_p1s[tid][xa_i], "*");
-#endif
+				#endif
 					strcpy(cigar_p2s[tid][xa_i_2], cp2);
 					lv_re2s[tid][xa_i_2] = lv_re2b;
 					chr_res[tid][xa_i_2] = chr_re;
@@ -10451,11 +10980,11 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					chr_res[tid][xa_i_1] = chr_re;
 					sam_pos1s[tid][xa_i_1] = (uint32_t )sam_pos1;
 					xa_i_1++;
-#ifdef	PICARD_BUG
+				#ifdef	PICARD_BUG
 					//strcpy(cigar_p2s[tid][xa_i], cp1);
-#else
+				#else
 					//strcpy(cigar_p2s[tid][xa_i], "*");
-#endif
+				#endif
 				}
 				else
 				{
@@ -10473,11 +11002,24 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					xa_i_1++;
 					xa_i_2++;
 				}
+				*/
+
+				strcpy(cigar_p1s[tid][xa_i_1], cp1);
+				strcpy(cigar_p2s[tid][xa_i_2], cp2);
+
+				lv_re1s[tid][xa_i_1] = lv_re1b;
+				lv_re2s[tid][xa_i_2] = lv_re2b;
+
+				chr_res[tid][xa_i_1] = chr_re;
+
+				sam_pos1s[tid][xa_i_1] = (uint32_t )sam_pos1;
+				sam_pos2s[tid][xa_i_2] = (uint32_t )sam_pos2;
+
+				xa_i_1++;
+				xa_i_2++;
+
 			}
 
-
-			//printf("vs_cnt begin\n");
-			
 			lv_re1f = dm_ops[tid];
 #ifdef	ALT_ALL
 
@@ -10492,7 +11034,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 			{
 #ifdef	REDUCE_ANCHOR
 				if(ops_mask[v_cnt_i] == 1)	continue;
-				
+
 				ops_mask[v_cnt_i] = 1;
 #endif
 				x = ops_vector_pos1[tid][v_cnt_i];
@@ -10517,9 +11059,13 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					}
 					chr_re = low;
 				}
-
-				sam_pos1 = ops_vector_pos1[tid][v_cnt_i] - chr_end_n[chr_re - 1] + 1;
-
+				if(chr_re)
+					sam_pos1 = ops_vector_pos1[tid][v_cnt_i] - chr_end_n[chr_re - 1] + 1;
+				else
+				{
+					sam_pos1 = ops_vector_pos1[tid][v_cnt_i];
+					chr_re = 1;
+				}
 				//chr_res[tid][xa_i] = chr_re;
 
 				if(ops_rc[tid][v_cnt_i] == 0)
@@ -10749,7 +11295,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 						m_n_b = 0;
 						m_m_n = s_r_o_r;
 					}
-					
+
 #ifdef	QUAL_FILT_SINGLE_OUT
 					for(bit_char_i = lv_up_right, read_b_i = 0; bit_char_i >= lv_up_left; bit_char_i--, read_b_i++)
 						read_char[tid][read_b_i] = ((read_bit_1[tid][bit_char_i >> 5] >> ((31 - (bit_char_i  & 0X1f)) << 1)) & 0X3);
@@ -11007,9 +11553,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 					if(read_length_1 != cigar_len)
 					{
-						//printf("end1 single xas cigar lenth: %s %u\n", cigar_p1, read_length_1);
-						//fflush(stdout);
-
 						if(read_length_1 < cigar_len)
 						{
 							cigar_len_re = cigar_len_tmp - (cigar_len - read_length_1);
@@ -11025,7 +11568,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					}
 #endif
 
-					//sprintf(cigar_p1 + snt, "\0");
 				}
 #ifdef	NO_S_OFF
 				s_offset1 = 0;
@@ -11295,9 +11837,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 						if(read_length_2 != cigar_len)
 						{
-							//printf("end2 single xas cigar lenth: %s %u\n", cigar_p2, read_length_2);
-							//fflush(stdout);
-
 							if(read_length_2 < cigar_len)
 							{
 								cigar_len_re = cigar_len_tmp - (cigar_len - read_length_2);
@@ -11312,7 +11851,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							}
 						}
 #endif
-						//sprintf(cigar_p2 + snt, "\0");
 					}
 #ifdef	NO_S_OFF
 					s_offset2 = 0;
@@ -11323,10 +11861,9 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					lv_re2f = dm1 + dm2;
 				}
 				else
-				{	
+				{
 #ifdef	REDUCE_ANCHOR
-					//printf("vs_cnt else end\n");
-					
+
 					if((ops_rc[tid][v_cnt_i] == 0) || (ops_rc[tid][v_cnt_i] == 3))
 					{
 						other_end_flag = 0;
@@ -11347,8 +11884,10 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									tra2_i++;
 									other_end_flag = 1;
 									break;
-								}	
-							}else{
+								}
+							}
+							else
+							{
 								v_cnt_i_tmp = orders2[tid][tra2_i];
 								op_vector_seq1_tmp = op_vector_seq1[tid][v_cnt_i_tmp];
 								if(op_mask[v_cnt_i_tmp] == 0)
@@ -11383,8 +11922,10 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									other_end_flag = 1;
 									break;
 								}
-								
-							}else{
+
+							}
+							else
+							{
 								v_cnt_i_tmp = orders1[tid][tra1_i];
 								op_vector_seq1_tmp = op_vector_seq1[tid][v_cnt_i_tmp];
 								if(op_mask[v_cnt_i_tmp] == 0)
@@ -11401,8 +11942,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 					if(other_end_flag)
 					{
-						//printf("vs_cnt other end\n");
-						
 						x = sam_pos2;
 						low = 0;
 						high = chr_file_n - 1;
@@ -11435,7 +11974,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							read_bit_2[tid] = read_bit2[tid][1];
 #else
 							strcpy(sam_seq1, seqio[seqi].read_seq1);
-							
+
 							/*
 							for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
 								sam_seq2[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
@@ -11879,9 +12418,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 							if(read_length_1 != cigar_len)
 							{
-								//printf("end1 single cigar lenth: %s %u\n", cigar_p2, read_length_1);
-								//fflush(stdout);
-
 								if(read_length_1 < cigar_len)
 								{
 									cigar_len_re = cigar_len_tmp - (cigar_len - read_length_1);
@@ -11896,7 +12432,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								}
 							}
 #endif
-							//sprintf(cigar_p2 + snt, "\0");
 						}
 #ifdef	NO_S_OFF
 						s_offset1 = 0;
@@ -11936,14 +12471,15 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				{
 					cp1 = cigar_p1;
 					cp2 = cigar_p2;
-					
+
 					xa_d1s[tid][xa_i_1] = '+';
 #ifdef	REDUCE_ANCHOR
 					if(other_end_flag)
 					{
 						if(rcs == 2)	xa_d2s[tid][xa_i_2] = '+';
 						else	xa_d2s[tid][xa_i_2] = '-';
-					}else	xa_d2s[tid][xa_i_2] = '-';
+					}
+					else	xa_d2s[tid][xa_i_2] = '-';
 #else
 					xa_d2s[tid][xa_i_2] = '-';
 #endif
@@ -11967,9 +12503,10 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					{
 						if(rcs == 0)	xa_d1s[tid][xa_i_1] = '+';
 						else	xa_d1s[tid][xa_i_1] = '-';
-					}else	xa_d1s[tid][xa_i_1] = '+';
+					}
+					else	xa_d1s[tid][xa_i_1] = '+';
 #else
-					xa_d1s[tid][xa_i_1] = '+';	
+					xa_d1s[tid][xa_i_1] = '+';
 #endif
 					xa_d2s[tid][xa_i_2] = '-';
 
@@ -11992,9 +12529,10 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					{
 						if(rcs == 0)	xa_d1s[tid][xa_i_1] = '+';
 						else	xa_d1s[tid][xa_i_1] = '-';
-					}else	xa_d1s[tid][xa_i_1] = '-';
+					}
+					else	xa_d1s[tid][xa_i_1] = '-';
 #else
-					xa_d1s[tid][xa_i_1] = '-';	
+					xa_d1s[tid][xa_i_1] = '-';
 #endif
 					xa_d2s[tid][xa_i_2] = '+';
 
@@ -12005,16 +12543,17 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				{
 					cp1 = cigar_p1;
 					cp2 = cigar_p2;
-					
+
 					xa_d1s[tid][xa_i_1] = '-';
 #ifdef	REDUCE_ANCHOR
 					if(other_end_flag)
 					{
 						if(rcs == 2)	xa_d2s[tid][xa_i_2] = '+';
 						else	xa_d2s[tid][xa_i_2] = '-';
-					}else	xa_d2s[tid][xa_i_2] = '+';
+					}
+					else	xa_d2s[tid][xa_i_2] = '+';
 #else
-					xa_d2s[tid][xa_i_2] = '+';	
+					xa_d2s[tid][xa_i_2] = '+';
 #endif
 					lv_re1b = lv_re1f;
 					lv_re2b = lv_re2f;
@@ -12022,14 +12561,15 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 
 				if(sam_pos1 <= 0) sam_pos1 = 1;
 				if(sam_pos2 <= 0) sam_pos2 = 1;
-				
+
+				/*
 				if((sam_flag1 == 117) || (sam_flag1 == 69))
 				{
-#ifdef	PICARD_BUG
+				#ifdef	PICARD_BUG
 					//strcpy(cigar_p1s[tid][xa_i], cp2);
-#else
+				#else
 					//strcpy(cigar_p1s[tid][xa_i], "*");
-#endif
+				#endif
 					strcpy(cigar_p2s[tid][xa_i_2], cp2);
 					lv_re2s[tid][xa_i_2] = lv_re2b;
 					chr_res[tid][xa_i_2] = chr_re;
@@ -12043,11 +12583,11 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					chr_res[tid][xa_i_1] = chr_re;
 					sam_pos1s[tid][xa_i_1] = (uint32_t )sam_pos1;
 					xa_i_1++;
-#ifdef	PICARD_BUG
+				#ifdef	PICARD_BUG
 					//strcpy(cigar_p2s[tid][xa_i], cp1);
-#else
+				#else
 					//strcpy(cigar_p2s[tid][xa_i], "*");
-#endif
+				#endif
 				}
 				else
 				{
@@ -12065,7 +12605,21 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					xa_i_1++;
 					xa_i_2++;
 				}
+				*/
 
+				strcpy(cigar_p1s[tid][xa_i_1], cp1);
+				strcpy(cigar_p2s[tid][xa_i_2], cp2);
+
+				lv_re1s[tid][xa_i_1] = lv_re1b;
+				lv_re2s[tid][xa_i_2] = lv_re2b;
+
+				chr_res[tid][xa_i_1] = chr_re;
+
+				sam_pos1s[tid][xa_i_1] = (uint32_t )sam_pos1;
+				sam_pos2s[tid][xa_i_2] = (uint32_t )sam_pos2;
+
+				xa_i_1++;
+				xa_i_2++;
 			}
 #else
 			v_cnt = 0;
@@ -12074,12 +12628,9 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 			seqio[seqi].v_cnt = v_cnt;
 			if(v_cnt > 0)
 			{
-#ifdef	POST_DEBUG
-				printf("anchor out\n");
-#endif
 				if(qual_flag == 1)
 					xa_i_1 = 0;
-				
+
 				if(qual_flag == 2)
 					xa_i_2 = 0;
 
@@ -12106,214 +12657,218 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 					seqio[seqi].qualc1 = 0;
 					seqio[seqi].qualc2 = 0;
 				}
-				
+
 				if(qual_flag == 1)
 					seqio[seqi].qualc1 = 0;
 
 				if(qual_flag == 2)
 					seqio[seqi].qualc2 = 0;
-				
+
 				memcpy(chr_res_buffer[seqi], chr_res[tid], (xa_i_1 > xa_i_2 ? xa_i_1:xa_i_2) << 2);
 				seqio[seqi].chr_res = chr_res_buffer[seqi];
 
 #ifdef	FIX_SV
-				//printf("sv out 5: %u %u\n", tra1_i, anchor_n1);
-				
+
+				seqio[seqi].xa_n_x1 = 0;
+				seqio[seqi].xa_n_x2 = 0;
+
 				tra_i_n = 0;
-				for(tra_i = tra1_i; (tra_i < anchor_n1) && ((xa_i_1 + tra_i_n) < CUS_MAX_OUTPUT_ALI2); tra_i++)
+				if(sv_add == 1)
 				{
-					if(orders1[tid][tra_i] >= MAX_REDUCE_ANCHOR_NUM)
+					for(tra_i = tra1_i; (tra_i_n < 1) && (tra_i < anchor_n1) && ((xa_i_1 + tra_i_n) < CUS_MAX_OUTPUT_ALI2); tra_i++)
 					{
-						v_cnt_i_tmp = orders1[tid][tra_i] - MAX_REDUCE_ANCHOR_NUM;
-						if(ops_mask[v_cnt_i_tmp] == 1)	continue;
-						op_vector_seq1_tmp = ops_vector_seq1[tid][v_cnt_i_tmp];
-					}else{
-						v_cnt_i_tmp = orders1[tid][tra_i];
-						if(op_mask[v_cnt_i_tmp] == 1)	continue;
-						op_vector_seq1_tmp = op_vector_seq1[tid][v_cnt_i_tmp];
-					}	
-
-					sam_pos2 = poses1[tid][tra_i];
-					x = sam_pos2;
-					low = 0;
-					high = chr_file_n - 1;
-
-					while ( low <= high )
-					{
-						mid = (low + high) >> 1;
-						if(x < (chr_end_n[mid]))
+						if(orders1[tid][tra_i] >= MAX_REDUCE_ANCHOR_NUM)
 						{
-							high = mid - 1;
-						}
-						else if(x > (chr_end_n[mid]))
-						{
-							low = mid + 1;
+							v_cnt_i_tmp = orders1[tid][tra_i] - MAX_REDUCE_ANCHOR_NUM;
+							if(ops_mask[v_cnt_i_tmp] == 1)	continue;
+							op_vector_seq1_tmp = ops_vector_seq1[tid][v_cnt_i_tmp];
 						}
 						else
 						{
-							chr_re =  mid;
-							break;
+							v_cnt_i_tmp = orders1[tid][tra_i];
+							if(op_mask[v_cnt_i_tmp] == 1)	continue;
+							op_vector_seq1_tmp = op_vector_seq1[tid][v_cnt_i_tmp];
 						}
-						chr_re = low;
-					}
 
-					sam_pos2 = x - chr_end_n[chr_re - 1] + 1;
+						sam_pos2 = poses1[tid][tra_i];
+						x = sam_pos2;
+						low = 0;
+						high = chr_file_n - 1;
 
-					rcs = rcs1[tid][tra_i];
-					rs = rs1[tid][tra_i];
-					ls = ls1[tid][tra_i];
-					chr_res_buffer1[seqi][tra_i_n] = chr_re;
-					
-					//printf("%u %u\n", chr_re, sam_pos2);
-					
-					if(rcs == 0)
-					{
-						xa_d1s[tid][xa_i_1 + tra_i_n] = '+';
+						while ( low <= high )
+						{
+							mid = (low + high) >> 1;
+							if(x < (chr_end_n[mid]))
+							{
+								high = mid - 1;
+							}
+							else if(x > (chr_end_n[mid]))
+							{
+								low = mid + 1;
+							}
+							else
+							{
+								chr_re =  mid;
+								break;
+							}
+							chr_re = low;
+						}
+
+						sam_pos2 = x - chr_end_n[chr_re - 1] + 1;
+
+						rcs = rcs1[tid][tra_i];
+						rs = rs1[tid][tra_i];
+						ls = ls1[tid][tra_i];
+						chr_res_buffer1[seqi][tra_i_n] = chr_re;
+
+						if(rcs == 0)
+						{
+							xa_d1s[tid][xa_i_1 + tra_i_n] = '+';
 #ifdef	CHAR_CP
-						read_bit_1[tid] = read_bit1[tid][0];
-						read_bit_2[tid] = read_bit2[tid][1];
+							read_bit_1[tid] = read_bit1[tid][0];
+							read_bit_2[tid] = read_bit2[tid][1];
 #else
-						strcpy(sam_seq1, seqio[seqi].read_seq1);
-							
-						/*
-						for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
-							sam_seq2[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
-						sam_seq2[sam_seq_i] = '\0';
+							strcpy(sam_seq1, seqio[seqi].read_seq1);
 
-						strrev1(sam_seq2);
-						*/
+							/*
+							for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
+								sam_seq2[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
+							sam_seq2[sam_seq_i] = '\0';
+
+							strrev1(sam_seq2);
+							*/
 #endif
 
 #ifdef	QUAL_FILT_SINGLE_OUT
-						qual_filt_lv_1 = qual_filt_lv1[tid][0];
-						qual_filt_lv_1_o = qual_filt_lv1[tid][1];
+							qual_filt_lv_1 = qual_filt_lv1[tid][0];
+							qual_filt_lv_1_o = qual_filt_lv1[tid][1];
 #endif
 
-						//cigar_m_1 = cigar_m1[tid];
-						//cigar_m_2 = cigar_m2[tid];
-						lv_k_1 = lv_k1;
-						lv_k_2 = lv_k2;
-						//read_length_1 = read_length1;
-						//read_length_2 = read_length2;
+							//cigar_m_1 = cigar_m1[tid];
+							//cigar_m_2 = cigar_m2[tid];
+							lv_k_1 = lv_k1;
+							lv_k_2 = lv_k2;
+							//read_length_1 = read_length1;
+							//read_length_2 = read_length2;
 
-						pound_pos_1_f = pound_pos1_f_forward;
-						pound_pos_1_r = pound_pos1_r_forward;
-						pound_pos_2_f = pound_pos2_f_reverse;
-						pound_pos_2_r = pound_pos2_r_reverse;
-					}
-					else
-					{
-						xa_d1s[tid][xa_i_1 + tra_i_n] = '-';
+							pound_pos_1_f = pound_pos1_f_forward;
+							pound_pos_1_r = pound_pos1_r_forward;
+							pound_pos_2_f = pound_pos2_f_reverse;
+							pound_pos_2_r = pound_pos2_r_reverse;
+						}
+						else
+						{
+							xa_d1s[tid][xa_i_1 + tra_i_n] = '-';
 #ifdef	CHAR_CP
-						read_bit_1[tid] = read_bit1[tid][1];
-						read_bit_2[tid] = read_bit2[tid][0];
+							read_bit_1[tid] = read_bit1[tid][1];
+							read_bit_2[tid] = read_bit2[tid][0];
 #else
-						for(sam_seq_i = 0; sam_seq_i < read_length1; sam_seq_i++)
-							sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq1[sam_seq_i]] ^ 0X3];
+							for(sam_seq_i = 0; sam_seq_i < read_length1; sam_seq_i++)
+								sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq1[sam_seq_i]] ^ 0X3];
 
-						sam_seq1[sam_seq_i] = '\0';
+							sam_seq1[sam_seq_i] = '\0';
 
-						strrev1(sam_seq1);
-						//strcpy(sam_seq2, seqio[seqi].read_seq2);
+							strrev1(sam_seq1);
+							//strcpy(sam_seq2, seqio[seqi].read_seq2);
 #endif
 
 #ifdef	QUAL_FILT_SINGLE_OUT
-						qual_filt_lv_1 = qual_filt_lv1[tid][1];
-						qual_filt_lv_1_o = qual_filt_lv1[tid][0];
+							qual_filt_lv_1 = qual_filt_lv1[tid][1];
+							qual_filt_lv_1_o = qual_filt_lv1[tid][0];
 #endif
 
-						//cigar_m_1 = cigar_m1[tid];
-						//cigar_m_2 = cigar_m2[tid];
-						lv_k_1 = lv_k1;
-						lv_k_2 = lv_k2;
-						//read_length_1 = read_length1;
-						//read_length_2 = read_length2;
+							//cigar_m_1 = cigar_m1[tid];
+							//cigar_m_2 = cigar_m2[tid];
+							lv_k_1 = lv_k1;
+							lv_k_2 = lv_k2;
+							//read_length_1 = read_length1;
+							//read_length_2 = read_length2;
 
-						pound_pos_1_f = pound_pos1_f_reverse;
-						pound_pos_1_r = pound_pos1_r_reverse;
-						pound_pos_2_f = pound_pos2_f_forward;
-						pound_pos_2_r = pound_pos2_r_forward;
-					}
+							pound_pos_1_f = pound_pos1_f_reverse;
+							pound_pos_1_r = pound_pos1_r_reverse;
+							pound_pos_2_f = pound_pos2_f_forward;
+							pound_pos_2_r = pound_pos2_r_forward;
+						}
 
-					d_n1 = 0;
-					i_n1 = 0;
-					s_offset1 = 0;
-					s_r_o_l = ls;
-					s_r_o_r = rs;
+						d_n1 = 0;
+						i_n1 = 0;
+						s_offset1 = 0;
+						s_r_o_l = ls;
+						s_r_o_r = rs;
 
-					if((s_r_o_l == 0) && (s_r_o_r == 0))
-					{
-						strcpy(cigar_p2, cigar_m1[tid]);
-					}
-					else     //indel
-					{
+						if((s_r_o_l == 0) && (s_r_o_r == 0))
+						{
+							strcpy(cigar_p2, cigar_m1[tid]);
+						}
+						else     //indel
+						{
 #ifdef	OUTPUT_DEBUG
-						if(pound_pos_1_f >= s_r_o_r)   //1
-						{
-							lv_up_left = 0;
-							lv_up_right = s_r_o_l;
-							lv_down_right = pound_pos_1_f;
-							lv_down_left = s_r_o_r;
-							m_n_f = 0;
-							m_n_b = read_length1 - pound_pos_1_f;
-							m_m_n = s_r_o_r - s_r_o_l - 1;
-						}
-						else if(pound_pos_1_r <= s_r_o_l + 1)     //5
-						{
-							lv_up_left = pound_pos_1_r;//
-							lv_up_right = s_r_o_l;
-							lv_down_right = read_length1;
-							lv_down_left = s_r_o_r;
-							m_n_f = pound_pos_1_r;
-							m_n_b = 0;
-							m_m_n = s_r_o_r - s_r_o_l - 1;
-						}
-						else if((pound_pos_1_f <= s_r_o_l + 1) && (pound_pos_1_r >= s_r_o_r))     //2
-						{
-							lv_up_left = 0;
-							lv_up_right = pound_pos_1_f - 1;
-							lv_down_right = read_length1;
-							lv_down_left = pound_pos_1_r;
-							m_n_f = 0;
-							m_n_b = 0;
-							m_m_n = pound_pos_1_r - pound_pos_1_f;
-						}
-						else if((pound_pos_1_f > s_r_o_l + 1) && (pound_pos_1_f < s_r_o_r))     //3
-						{
-							lv_up_left = 0;
-							lv_up_right = s_r_o_l;
-							lv_down_right = read_length1;
-							lv_down_left = pound_pos_1_r;
-							m_n_f = 0;
-							m_n_b = 0;
-							m_m_n = read_length1 - s_r_o_l - 1;
-						}
-						else//4
-						{
-							lv_up_left = 0;
-							lv_up_right = -1;
-							lv_down_right = read_length1;
-							lv_down_left = s_r_o_r;
-							m_n_f = 0;
-							m_n_b = 0;
-							m_m_n = s_r_o_r;
-						}
+							if(pound_pos_1_f >= s_r_o_r)   //1
+							{
+								lv_up_left = 0;
+								lv_up_right = s_r_o_l;
+								lv_down_right = pound_pos_1_f;
+								lv_down_left = s_r_o_r;
+								m_n_f = 0;
+								m_n_b = read_length1 - pound_pos_1_f;
+								m_m_n = s_r_o_r - s_r_o_l - 1;
+							}
+							else if(pound_pos_1_r <= s_r_o_l + 1)     //5
+							{
+								lv_up_left = pound_pos_1_r;//
+								lv_up_right = s_r_o_l;
+								lv_down_right = read_length1;
+								lv_down_left = s_r_o_r;
+								m_n_f = pound_pos_1_r;
+								m_n_b = 0;
+								m_m_n = s_r_o_r - s_r_o_l - 1;
+							}
+							else if((pound_pos_1_f <= s_r_o_l + 1) && (pound_pos_1_r >= s_r_o_r))     //2
+							{
+								lv_up_left = 0;
+								lv_up_right = pound_pos_1_f - 1;
+								lv_down_right = read_length1;
+								lv_down_left = pound_pos_1_r;
+								m_n_f = 0;
+								m_n_b = 0;
+								m_m_n = pound_pos_1_r - pound_pos_1_f;
+							}
+							else if((pound_pos_1_f > s_r_o_l + 1) && (pound_pos_1_f < s_r_o_r))     //3
+							{
+								lv_up_left = 0;
+								lv_up_right = s_r_o_l;
+								lv_down_right = read_length1;
+								lv_down_left = pound_pos_1_r;
+								m_n_f = 0;
+								m_n_b = 0;
+								m_m_n = read_length1 - s_r_o_l - 1;
+							}
+							else//4
+							{
+								lv_up_left = 0;
+								lv_up_right = -1;
+								lv_down_right = read_length1;
+								lv_down_left = s_r_o_r;
+								m_n_f = 0;
+								m_n_b = 0;
+								m_m_n = s_r_o_r;
+							}
 #ifdef	QUAL_FILT_SINGLE_OUT
-						for(bit_char_i = lv_up_right, read_b_i = 0; bit_char_i >= lv_up_left; bit_char_i--, read_b_i++)
-							read_char[tid][read_b_i] = ((read_bit_1[tid][bit_char_i >> 5] >> ((31 - (bit_char_i  & 0X1f)) << 1)) & 0X3);
+							for(bit_char_i = lv_up_right, read_b_i = 0; bit_char_i >= lv_up_left; bit_char_i--, read_b_i++)
+								read_char[tid][read_b_i] = ((read_bit_1[tid][bit_char_i >> 5] >> ((31 - (bit_char_i  & 0X1f)) << 1)) & 0X3);
 
-						for(bit_char_i = 32 + lv_up_right, read_b_i = 0; bit_char_i > lv_up_left - 1; bit_char_i--, read_b_i++)
-							ali_ref_seq[tid][read_b_i] = ((op_vector_seq1_tmp[bit_char_i >> 5] >> ((31 - (bit_char_i & 0X1f)) << 1)) & 0X3);
+							for(bit_char_i = 32 + lv_up_right, read_b_i = 0; bit_char_i > lv_up_left - 1; bit_char_i--, read_b_i++)
+								ali_ref_seq[tid][read_b_i] = ((op_vector_seq1_tmp[bit_char_i >> 5] >> ((31 - (bit_char_i & 0X1f)) << 1)) & 0X3);
 
-						computeEditDistanceWithCigar_s_mis_left(ali_ref_seq[tid], 33 + lv_up_right - lv_up_left, read_char[tid], lv_up_right + 1 - lv_up_left, lv_k_1, cigarBuf1, f_cigarn, L[tid], qual_filt_lv_1_o + read_length1 - 1- lv_up_right, &s_offset1);//, 0, op_dm_sl1[tid][v_cnt_i]
+							computeEditDistanceWithCigar_s_mis_left(ali_ref_seq[tid], 33 + lv_up_right - lv_up_left, read_char[tid], lv_up_right + 1 - lv_up_left, lv_k_1, cigarBuf1, f_cigarn, L[tid], qual_filt_lv_1_o + read_length1 - 1- lv_up_right, &s_offset1);//, 0, op_dm_sl1[tid][v_cnt_i]
 
-						for(bit_char_i = lv_down_left, read_b_i = 0; bit_char_i < lv_down_right; bit_char_i++, read_b_i++)
-							read_char[tid][read_b_i] = ((read_bit_1[tid][bit_char_i >> 5] >> ((31 - (bit_char_i  & 0X1f)) << 1)) & 0X3);
+							for(bit_char_i = lv_down_left, read_b_i = 0; bit_char_i < lv_down_right; bit_char_i++, read_b_i++)
+								read_char[tid][read_b_i] = ((read_bit_1[tid][bit_char_i >> 5] >> ((31 - (bit_char_i  & 0X1f)) << 1)) & 0X3);
 
-						for(bit_char_i = 32 + lv_down_left, read_b_i = 0; bit_char_i < lv_down_right + 64; bit_char_i++, read_b_i++)
-							ali_ref_seq[tid][read_b_i] = ((op_vector_seq1_tmp[bit_char_i >> 5] >> ((31 - (bit_char_i & 0X1f)) << 1)) & 0X3);
+							for(bit_char_i = 32 + lv_down_left, read_b_i = 0; bit_char_i < lv_down_right + 64; bit_char_i++, read_b_i++)
+								ali_ref_seq[tid][read_b_i] = ((op_vector_seq1_tmp[bit_char_i >> 5] >> ((31 - (bit_char_i & 0X1f)) << 1)) & 0X3);
 
-						computeEditDistanceWithCigar_s_mis(ali_ref_seq[tid], 32 + lv_down_right - lv_down_left, read_char[tid], lv_down_right - lv_down_left, lv_k_1, cigarBuf2, f_cigarn, L[tid], qual_filt_lv_1);//, 0, op_dm_sr1[tid][v_cnt_i]
+							computeEditDistanceWithCigar_s_mis(ali_ref_seq[tid], 32 + lv_down_right - lv_down_left, read_char[tid], lv_down_right - lv_down_left, lv_k_1, cigarBuf2, f_cigarn, L[tid], qual_filt_lv_1);//, 0, op_dm_sr1[tid][v_cnt_i]
 
 #else
 
@@ -12361,7 +12916,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								pchl = strlen(pch);
 								f_cigar[f_cigarn - f_c - 2] = atoi(pch);
 								s_o += (pchl + 1);
-								if(str_o[s_o - 1] == 'S')	f_cigar[f_cigarn - f_c - 1] = 'H';
+								if(str_o[s_o - 1] == 'S')	f_cigar[f_cigarn - f_c - 1] = 'S';
 								else	f_cigar[f_cigarn - f_c - 1] = str_o[s_o - 1];
 
 								f_c += 2;
@@ -12382,7 +12937,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 #ifdef	CIGAR_S_MODIFY
 							if(lv_up_left)
 							{
-								sn = sprintf(cigar_p2 + snt, "%uH", lv_up_left);
+								sn = sprintf(cigar_p2 + snt, "%uS", lv_up_left);
 								snt += sn;
 							}
 #else
@@ -12394,7 +12949,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									{
 										f_cigar[f_cigarn - f_c] += m_n_f;
 									}
-									else if(f_cigar[f_cigarn + 1 - f_c] == 'H')
+									else if(f_cigar[f_cigarn + 1 - f_c] == 'S')
 									{
 										f_cigar[f_cigarn - f_c] += m_n_f;
 									}
@@ -12497,7 +13052,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 #ifdef	CIGAR_S_MODIFY
 							if(lv_down_right < read_length1)
 							{
-								sn = sprintf(cigar_p2 + snt, "%uH", read_length1 - lv_down_right);
+								sn = sprintf(cigar_p2 + snt, "%uS", read_length1 - lv_down_right);
 								snt += sn;
 							}
 #else
@@ -12513,14 +13068,14 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									sn = sprintf(cigar_p2 + bit_char_i + 1, "%uM", m_n_b);
 									snt = bit_char_i + 1 + sn;
 								}
-								else if(cigar_p2[snt - 1] == 'H')
+								else if(cigar_p2[snt - 1] == 'S')
 								{
 									for(bit_char_i = snt - 2, f_i = 0; bit_char_i > -1; bit_char_i--, f_i++)
 									{
 										if((cigar_p2[bit_char_i] > 64) && (cigar_p2[bit_char_i] < 91))	break;
 										m_n_b += (cigar_p2[bit_char_i] - '0') * carry_ten[f_i];
 									}
-									sn = sprintf(cigar_p2 + bit_char_i + 1, "%uH", m_n_b);
+									sn = sprintf(cigar_p2 + bit_char_i + 1, "%uS", m_n_b);
 									snt = bit_char_i + 1 + sn;
 								}
 								else
@@ -12532,11 +13087,15 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 #endif
 
 #ifdef	CIGAR_LEN_ERR
+
+#ifdef FIX_SA
+							sv_s_len = 0;
+#endif
 							cigar_len = 0;
 							s_o_tmp = 0;
 							strncpy(cigar_tmp, cigar_p2, snt);
 							cigar_tmp[snt] = '\0';
-							pch_tmp = strtok_r(cigar_tmp,"DMIH", &saveptr_tmp);
+							pch_tmp = strtok_r(cigar_tmp,"DMIS", &saveptr_tmp);
 
 							while (pch_tmp != NULL)
 							{
@@ -12547,15 +13106,16 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								{
 									cigar_len_tmp = atoi(pch_tmp);
 									cigar_len += cigar_len_tmp;
+#ifdef FIX_SA
+									if(cigar_p2[s_o_tmp - 1] == 'S')
+										sv_s_len += cigar_len_tmp;
+#endif
 								}
-								pch_tmp = strtok_r(NULL, "DMIH", &saveptr_tmp);
+								pch_tmp = strtok_r(NULL, "DMIS", &saveptr_tmp);
 							}
 
 							if(read_length1 != cigar_len)
 							{
-								//printf("end1 single cigar lenth: %s %u\n", cigar_p2, read_length1);
-								//fflush(stdout);
-
 								if(read_length1 < cigar_len)
 								{
 									cigar_len_re = cigar_len_tmp - (cigar_len - read_length1);
@@ -12570,112 +13130,231 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								}
 							}
 #endif
-							//sprintf(cigar_p2 + snt, "\0");
 						}
 #ifdef	NO_S_OFF
 						s_offset1 = 0;
 #endif
 						sam_pos2 = sam_pos2 + i_n1 - d_n1 + s_offset1;
 						if(sam_pos2 == seqio[seqi].pos1)	continue;
-						sam_pos1s[tid][xa_i_1 + tra_i_n] = (uint32_t )sam_pos2;
-						
-						lv_re1s[tid][xa_i_1 + tra_i_n] = dms1[tid][tra_i];
-						strcpy(cigar_p1s[tid][xa_i_1 + tra_i_n], cigar_p2);
-						tra_i_n++;
-				}
-				
-				seqio[seqi].chr_res_s1 = chr_res_buffer1[seqi];
-				seqio[seqi].xa_n_x1 = tra_i_n;
-				
-				//printf("sv out 6: %u %u %u\n", tra_i_n, tra2_i, anchor_n2);
-				
-				tra_i_n = 0;
-				for(tra_i = tra2_i; (tra_i < anchor_n2) && ((xa_i_2 + tra_i_n) < CUS_MAX_OUTPUT_ALI2); tra_i++)
-				{
-					if(orders2[tid][tra_i] >= MAX_REDUCE_ANCHOR_NUM)
-					{
-						v_cnt_i_tmp = orders2[tid][tra_i] - MAX_REDUCE_ANCHOR_NUM;
-						if(ops_mask[v_cnt_i_tmp] == 1)	continue;
-						op_vector_seq1_tmp = ops_vector_seq1[tid][v_cnt_i_tmp];
-					}else{
-						v_cnt_i_tmp = orders2[tid][tra_i];
-						if(op_mask[v_cnt_i_tmp] == 1)	continue;
-						op_vector_seq1_tmp = op_vector_seq1[tid][v_cnt_i_tmp];
-					}
-					
-					sam_pos2 = poses2[tid][tra_i];
-					
-					x = sam_pos2;
-					low = 0;
-					high = chr_file_n - 1;
+						if(sam_pos2 <= 0)	sam_pos2 = 1;
 
-					while ( low <= high )
-					{
-						mid = (low + high) >> 1;
-						if(x < (chr_end_n[mid]))
+						if(sv_s_len_p > sv_s_len)
 						{
-							high = mid - 1;
-						}
-						else if(x > (chr_end_n[mid]))
-						{
-							low = mid + 1;
+							chr_res_buffer1[seqi][tra_i_n] = seqio[seqi].chr_re1;
+							seqio[seqi].chr_re1 = chr_re;
+
+							sam_pos1s[tid][xa_i_1 + tra_i_n] = seqio[seqi].pos1;
+
+							if((sam_pos2 + read_length1 - 1) > (chr_end_n[chr_re] - chr_end_n[chr_re - 1]))
+								sam_pos2 -= read_length1;
+
+							seqio[seqi].pos1 = sam_pos2;
+							
+							lv_re1s[tid][xa_i_1 + tra_i_n] = seqio[seqi].nm1;
+
+							seqio[seqi].nm1 = dms1[tid][tra_i];
+							
+							if(seqio[seqi].flag1 & 0X10)
+								xa_d1s[tid][xa_i_1 + tra_i_n] = '-';
+							else xa_d1s[tid][xa_i_1 + tra_i_n] = '+';
+
+							if(rcs == 0)
+							{
+								if(op_rc_tmp == 1)	//1+ 2-
+								{
+									seqio[seqi].flag1 = 97;
+									seqio[seqi].flag2 = 145;
+									//xa_d1s[tid][xa_i_1 + tra_i_n] = '+';
+									if(seqio[seqi].pos2 > sam_pos2)
+										sam_cross = seqio[seqi].pos2 + read_length2 - sam_pos2;
+									else
+										sam_cross = seqio[seqi].pos2 - sam_pos2 - read_length1;
+									
+									seqio[seqi].seq1 = seqio[seqi].read_seq1;
+
+									for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
+										sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
+									sam_seq1[sam_seq_i] = '\0';
+									strrev1(sam_seq1);
+
+									strcpy(read_rev_buffer[seqi], sam_seq1);
+									read_rev_buffer[seqi][read_length2] = '\0';
+									seqio[seqi].seq2 = read_rev_buffer[seqi];
+								}
+								else 				//1+ 2+
+								{
+									seqio[seqi].flag1 = 65;
+									seqio[seqi].flag2 = 129;
+									//xa_d1s[tid][xa_i_1 + tra_i_n] = '-';
+									sam_cross = seqio[seqi].pos2 - sam_pos2;
+
+									seqio[seqi].seq1 = seqio[seqi].read_seq1;
+									seqio[seqi].seq2 = seqio[seqi].read_seq2;
+									//strrev1(qual2_buffer[seqi]);
+								}
+							}
+							else
+							{
+								if(op_rc_tmp == 1)	//1- 2-
+								{
+									seqio[seqi].flag1 = 113;
+									seqio[seqi].flag2 = 177;
+									//xa_d1s[tid][xa_i_1 + tra_i_n] = '+';
+									sam_cross = seqio[seqi].pos2 - sam_pos2;
+
+									for(sam_seq_i = 0; sam_seq_i < read_length1; sam_seq_i++)
+										sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq1[sam_seq_i]] ^ 0X3];
+									sam_seq1[sam_seq_i] = '\0';
+									strrev1(sam_seq1);
+
+									strcpy(read_rev_buffer[seqi], sam_seq1);
+									read_rev_buffer[seqi][read_length1] = '\0';
+									seqio[seqi].seq1 = read_rev_buffer[seqi];
+
+									for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
+										sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
+									sam_seq1[sam_seq_i] = '\0';
+									strrev1(sam_seq1);
+
+									strcpy(read_rev_buffer_1[seqi], sam_seq1);
+									read_rev_buffer_1[seqi][read_length2] = '\0';
+									seqio[seqi].seq2 = read_rev_buffer_1[seqi];
+
+									//strrev1(qual1_buffer[seqi]);
+								}
+								else 				//1- 2+
+								{
+									seqio[seqi].flag1 = 81;
+									seqio[seqi].flag2 = 161;
+									//xa_d1s[tid][xa_i_1 + tra_i_n] = '-';
+									if(sam_pos2 > seqio[seqi].pos2)
+										sam_cross = seqio[seqi].pos2 - read_length1 - sam_pos2;
+									else
+										sam_cross = seqio[seqi].pos2 + read_length2 - sam_pos2;
+									
+									for(sam_seq_i = 0; sam_seq_i < read_length1; sam_seq_i++)
+										sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq1[sam_seq_i]] ^ 0X3];
+									sam_seq1[sam_seq_i] = '\0';
+									strrev1(sam_seq1);
+
+									strcpy(read_rev_buffer[seqi], sam_seq1);
+									read_rev_buffer[seqi][read_length1] = '\0';
+									seqio[seqi].seq1 = read_rev_buffer[seqi];
+
+									seqio[seqi].seq2 = seqio[seqi].read_seq2;
+								}
+							}
+							seqio[seqi].cross = sam_cross;
+
+							strcpy(cigar_p1s[tid][xa_i_1 + tra_i_n], pr_cigar1_buffer[seqi]);
+							strcpy(pr_cigar1_buffer[seqi], cigar_p2);
 						}
 						else
 						{
-							chr_re =  mid;
-							break;
+							sam_pos1s[tid][xa_i_1 + tra_i_n] = (uint32_t )sam_pos2;
+
+							lv_re1s[tid][xa_i_1 + tra_i_n] = dms1[tid][tra_i];
+							strcpy(cigar_p1s[tid][xa_i_1 + tra_i_n], cigar_p2);
 						}
-						chr_re = low;
+						tra_i_n++;
 					}
 
-					sam_pos2 = x - chr_end_n[chr_re - 1] + 1;
+					seqio[seqi].chr_res_s1 = chr_res_buffer1[seqi];
+					seqio[seqi].xa_n_x1 = tra_i_n;
+					//xa_i_1 += seqio[seqi].xa_n_x1;
+					xa_i_1 += tra_i_n;
 
-					rcs = rcs2[tid][tra_i];
-					rs = rs2[tid][tra_i];
-					ls = ls2[tid][tra_i];
-					chr_res_buffer2[seqi][tra_i_n] = chr_re;
-
-					if(rcs == 1)
+				}
+				else
+				{
+					for(tra_i = tra2_i; (tra_i_n < 1) && (tra_i < anchor_n2) && ((xa_i_2 + tra_i_n) < CUS_MAX_OUTPUT_ALI2); tra_i++)
 					{
-						xa_d2s[tid][xa_i_2 + tra_i_n] = '-';
+						if(orders2[tid][tra_i] >= MAX_REDUCE_ANCHOR_NUM)
+						{
+							v_cnt_i_tmp = orders2[tid][tra_i] - MAX_REDUCE_ANCHOR_NUM;
+							if(ops_mask[v_cnt_i_tmp] == 1)	continue;
+							op_vector_seq1_tmp = ops_vector_seq1[tid][v_cnt_i_tmp];
+						}
+						else
+						{
+							v_cnt_i_tmp = orders2[tid][tra_i];
+							if(op_mask[v_cnt_i_tmp] == 1)	continue;
+							op_vector_seq1_tmp = op_vector_seq1[tid][v_cnt_i_tmp];
+						}
+
+						sam_pos2 = poses2[tid][tra_i];
+
+						x = sam_pos2;
+						low = 0;
+						high = chr_file_n - 1;
+
+						while ( low <= high )
+						{
+							mid = (low + high) >> 1;
+							if(x < (chr_end_n[mid]))
+							{
+								high = mid - 1;
+							}
+							else if(x > (chr_end_n[mid]))
+							{
+								low = mid + 1;
+							}
+							else
+							{
+								chr_re =  mid;
+								break;
+							}
+							chr_re = low;
+						}
+
+						sam_pos2 = x - chr_end_n[chr_re - 1] + 1;
+
+						rcs = rcs2[tid][tra_i];
+						rs = rs2[tid][tra_i];
+						ls = ls2[tid][tra_i];
+						chr_res_buffer2[seqi][tra_i_n] = chr_re;
+
+						if(rcs == 1)
+						{
+							xa_d2s[tid][xa_i_2 + tra_i_n] = '-';
 #ifdef	CHAR_CP
-						read_bit_1[tid] = read_bit2[tid][1];
-						read_bit_2[tid] = read_bit1[tid][0];
+							read_bit_1[tid] = read_bit2[tid][1];
+							read_bit_2[tid] = read_bit1[tid][0];
 #else
-						for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
-							sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
+							for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
+								sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
 
-						sam_seq1[sam_seq_i] = '\0';
+							sam_seq1[sam_seq_i] = '\0';
 
-						strrev1(sam_seq1);
-						//strcpy(sam_seq2, seqio[seqi].read_seq1);
+							strrev1(sam_seq1);
+							//strcpy(sam_seq2, seqio[seqi].read_seq1);
 #endif
 
 #ifdef	QUAL_FILT_SINGLE_OUT
-						qual_filt_lv_1 = qual_filt_lv2[tid][1];
-						qual_filt_lv_1_o = qual_filt_lv2[tid][0];
+							qual_filt_lv_1 = qual_filt_lv2[tid][1];
+							qual_filt_lv_1_o = qual_filt_lv2[tid][0];
 #endif
 
-						//cigar_m_1 = cigar_m2[tid];
-						//cigar_m_2 = cigar_m1[tid];
-						lv_k_1 = lv_k2;
-						lv_k_2 = lv_k1;
-						//read_length_1 = read_length2;
-						//read_length_2 = read_length1;
+							//cigar_m_1 = cigar_m2[tid];
+							//cigar_m_2 = cigar_m1[tid];
+							lv_k_1 = lv_k2;
+							lv_k_2 = lv_k1;
+							//read_length_1 = read_length2;
+							//read_length_2 = read_length1;
 
-						pound_pos_1_f = pound_pos2_f_reverse;
-						pound_pos_1_r = pound_pos2_r_reverse;
-						pound_pos_2_f = pound_pos1_f_forward;
-						pound_pos_2_r = pound_pos1_r_forward;
-					}
-					else
-					{
-						xa_d2s[tid][xa_i_2 + tra_i_n] = '+';
+							pound_pos_1_f = pound_pos2_f_reverse;
+							pound_pos_1_r = pound_pos2_r_reverse;
+							pound_pos_2_f = pound_pos1_f_forward;
+							pound_pos_2_r = pound_pos1_r_forward;
+						}
+						else
+						{
+							xa_d2s[tid][xa_i_2 + tra_i_n] = '+';
 #ifdef	CHAR_CP
-						read_bit_1[tid] = read_bit2[tid][0];
-						read_bit_2[tid] = read_bit1[tid][1];
+							read_bit_1[tid] = read_bit2[tid][0];
+							read_bit_2[tid] = read_bit1[tid][1];
 #else
-						strcpy(sam_seq1, seqio[seqi].read_seq2);
+							strcpy(sam_seq1, seqio[seqi].read_seq2);
 							/*
 							for(sam_seq_i = 0; sam_seq_i < read_length1; sam_seq_i++)
 								sam_seq2[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq1[sam_seq_i]] ^ 0X3];
@@ -12702,87 +13381,87 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							pound_pos_1_r = pound_pos2_r_forward;
 							pound_pos_2_f = pound_pos1_f_reverse;
 							pound_pos_2_r = pound_pos1_r_reverse;
-					}
+						}
 
-					d_n1 = 0;
-					i_n1 = 0;
-					s_offset1 = 0;
-					s_r_o_l = ls;
-					s_r_o_r = rs;
+						d_n1 = 0;
+						i_n1 = 0;
+						s_offset1 = 0;
+						s_r_o_l = ls;
+						s_r_o_r = rs;
 
-					if((s_r_o_l == 0) && (s_r_o_r == 0))
-					{
-						strcpy(cigar_p2, cigar_m2[tid]);
-					}
-					else     //indel
-					{
+						if((s_r_o_l == 0) && (s_r_o_r == 0))
+						{
+							strcpy(cigar_p2, cigar_m2[tid]);
+						}
+						else     //indel
+						{
 #ifdef	OUTPUT_DEBUG
-						if(pound_pos_1_f >= s_r_o_r)   //1
-						{
-							lv_up_left = 0;
-							lv_up_right = s_r_o_l;
-							lv_down_right = pound_pos_1_f;
-							lv_down_left = s_r_o_r;
-							m_n_f = 0;
-							m_n_b = read_length2 - pound_pos_1_f;
-							m_m_n = s_r_o_r - s_r_o_l - 1;
-						}
-						else if(pound_pos_1_r <= s_r_o_l + 1)     //5
-						{
-							lv_up_left = pound_pos_1_r;//
-							lv_up_right = s_r_o_l;
-							lv_down_right = read_length2;
-							lv_down_left = s_r_o_r;
-							m_n_f = pound_pos_1_r;
-							m_n_b = 0;
-							m_m_n = s_r_o_r - s_r_o_l - 1;
-						}
-						else if((pound_pos_1_f <= s_r_o_l + 1) && (pound_pos_1_r >= s_r_o_r))     //2
-						{
-							lv_up_left = 0;
-							lv_up_right = pound_pos_1_f - 1;
-							lv_down_right = read_length2;
-							lv_down_left = pound_pos_1_r;
-							m_n_f = 0;
-							m_n_b = 0;
-							m_m_n = pound_pos_1_r - pound_pos_1_f;
-						}
-						else if((pound_pos_1_f > s_r_o_l + 1) && (pound_pos_1_f < s_r_o_r))     //3
-						{
-							lv_up_left = 0;
-							lv_up_right = s_r_o_l;
-							lv_down_right = read_length2;
-							lv_down_left = pound_pos_1_r;
-							m_n_f = 0;
-							m_n_b = 0;
-							m_m_n = read_length2 - s_r_o_l - 1;
-						}
-						else//4
-						{
-							lv_up_left = 0;
-							lv_up_right = -1;
-							lv_down_right = read_length2;
-							lv_down_left = s_r_o_r;
-							m_n_f = 0;
-							m_n_b = 0;
-							m_m_n = s_r_o_r;
-						}
+							if(pound_pos_1_f >= s_r_o_r)   //1
+							{
+								lv_up_left = 0;
+								lv_up_right = s_r_o_l;
+								lv_down_right = pound_pos_1_f;
+								lv_down_left = s_r_o_r;
+								m_n_f = 0;
+								m_n_b = read_length2 - pound_pos_1_f;
+								m_m_n = s_r_o_r - s_r_o_l - 1;
+							}
+							else if(pound_pos_1_r <= s_r_o_l + 1)     //5
+							{
+								lv_up_left = pound_pos_1_r;//
+								lv_up_right = s_r_o_l;
+								lv_down_right = read_length2;
+								lv_down_left = s_r_o_r;
+								m_n_f = pound_pos_1_r;
+								m_n_b = 0;
+								m_m_n = s_r_o_r - s_r_o_l - 1;
+							}
+							else if((pound_pos_1_f <= s_r_o_l + 1) && (pound_pos_1_r >= s_r_o_r))     //2
+							{
+								lv_up_left = 0;
+								lv_up_right = pound_pos_1_f - 1;
+								lv_down_right = read_length2;
+								lv_down_left = pound_pos_1_r;
+								m_n_f = 0;
+								m_n_b = 0;
+								m_m_n = pound_pos_1_r - pound_pos_1_f;
+							}
+							else if((pound_pos_1_f > s_r_o_l + 1) && (pound_pos_1_f < s_r_o_r))     //3
+							{
+								lv_up_left = 0;
+								lv_up_right = s_r_o_l;
+								lv_down_right = read_length2;
+								lv_down_left = pound_pos_1_r;
+								m_n_f = 0;
+								m_n_b = 0;
+								m_m_n = read_length2 - s_r_o_l - 1;
+							}
+							else//4
+							{
+								lv_up_left = 0;
+								lv_up_right = -1;
+								lv_down_right = read_length2;
+								lv_down_left = s_r_o_r;
+								m_n_f = 0;
+								m_n_b = 0;
+								m_m_n = s_r_o_r;
+							}
 #ifdef	QUAL_FILT_SINGLE_OUT
-						for(bit_char_i = lv_up_right, read_b_i = 0; bit_char_i >= lv_up_left; bit_char_i--, read_b_i++)
-							read_char[tid][read_b_i] = ((read_bit_1[tid][bit_char_i >> 5] >> ((31 - (bit_char_i  & 0X1f)) << 1)) & 0X3);
+							for(bit_char_i = lv_up_right, read_b_i = 0; bit_char_i >= lv_up_left; bit_char_i--, read_b_i++)
+								read_char[tid][read_b_i] = ((read_bit_1[tid][bit_char_i >> 5] >> ((31 - (bit_char_i  & 0X1f)) << 1)) & 0X3);
 
-						for(bit_char_i = 32 + lv_up_right, read_b_i = 0; bit_char_i > lv_up_left - 1; bit_char_i--, read_b_i++)
-							ali_ref_seq[tid][read_b_i] = ((op_vector_seq1_tmp[bit_char_i >> 5] >> ((31 - (bit_char_i & 0X1f)) << 1)) & 0X3);
+							for(bit_char_i = 32 + lv_up_right, read_b_i = 0; bit_char_i > lv_up_left - 1; bit_char_i--, read_b_i++)
+								ali_ref_seq[tid][read_b_i] = ((op_vector_seq1_tmp[bit_char_i >> 5] >> ((31 - (bit_char_i & 0X1f)) << 1)) & 0X3);
 
-						computeEditDistanceWithCigar_s_mis_left(ali_ref_seq[tid], 33 + lv_up_right - lv_up_left, read_char[tid], lv_up_right + 1 - lv_up_left, lv_k_1, cigarBuf1, f_cigarn, L[tid], qual_filt_lv_1_o + read_length2 - 1- lv_up_right, &s_offset1);//, 0, op_dm_sl1[tid][v_cnt_i]
+							computeEditDistanceWithCigar_s_mis_left(ali_ref_seq[tid], 33 + lv_up_right - lv_up_left, read_char[tid], lv_up_right + 1 - lv_up_left, lv_k_1, cigarBuf1, f_cigarn, L[tid], qual_filt_lv_1_o + read_length2 - 1- lv_up_right, &s_offset1);//, 0, op_dm_sl1[tid][v_cnt_i]
 
-						for(bit_char_i = lv_down_left, read_b_i = 0; bit_char_i < lv_down_right; bit_char_i++, read_b_i++)
-							read_char[tid][read_b_i] = ((read_bit_1[tid][bit_char_i >> 5] >> ((31 - (bit_char_i  & 0X1f)) << 1)) & 0X3);
+							for(bit_char_i = lv_down_left, read_b_i = 0; bit_char_i < lv_down_right; bit_char_i++, read_b_i++)
+								read_char[tid][read_b_i] = ((read_bit_1[tid][bit_char_i >> 5] >> ((31 - (bit_char_i  & 0X1f)) << 1)) & 0X3);
 
-						for(bit_char_i = 32 + lv_down_left, read_b_i = 0; bit_char_i < lv_down_right + 64; bit_char_i++, read_b_i++)
-							ali_ref_seq[tid][read_b_i] = ((op_vector_seq1_tmp[bit_char_i >> 5] >> ((31 - (bit_char_i & 0X1f)) << 1)) & 0X3);
+							for(bit_char_i = 32 + lv_down_left, read_b_i = 0; bit_char_i < lv_down_right + 64; bit_char_i++, read_b_i++)
+								ali_ref_seq[tid][read_b_i] = ((op_vector_seq1_tmp[bit_char_i >> 5] >> ((31 - (bit_char_i & 0X1f)) << 1)) & 0X3);
 
-						computeEditDistanceWithCigar_s_mis(ali_ref_seq[tid], 32 + lv_down_right - lv_down_left, read_char[tid], lv_down_right - lv_down_left, lv_k_1, cigarBuf2, f_cigarn, L[tid], qual_filt_lv_1);//, 0, op_dm_sr1[tid][v_cnt_i]
+							computeEditDistanceWithCigar_s_mis(ali_ref_seq[tid], 32 + lv_down_right - lv_down_left, read_char[tid], lv_down_right - lv_down_left, lv_k_1, cigarBuf2, f_cigarn, L[tid], qual_filt_lv_1);//, 0, op_dm_sr1[tid][v_cnt_i]
 
 #else
 
@@ -12830,7 +13509,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								pchl = strlen(pch);
 								f_cigar[f_cigarn - f_c - 2] = atoi(pch);
 								s_o += (pchl + 1);
-								if(str_o[s_o - 1] == 'S')	f_cigar[f_cigarn - f_c - 1] = 'H';
+								if(str_o[s_o - 1] == 'S')	f_cigar[f_cigarn - f_c - 1] = 'S';
 								else	f_cigar[f_cigarn - f_c - 1] = str_o[s_o - 1];
 
 								f_c += 2;
@@ -12851,7 +13530,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 #ifdef	CIGAR_S_MODIFY
 							if(lv_up_left)
 							{
-								sn = sprintf(cigar_p2 + snt, "%uH", lv_up_left);
+								sn = sprintf(cigar_p2 + snt, "%uS", lv_up_left);
 								snt += sn;
 							}
 #else
@@ -12863,7 +13542,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									{
 										f_cigar[f_cigarn - f_c] += m_n_f;
 									}
-									else if(f_cigar[f_cigarn + 1 - f_c] == 'H')
+									else if(f_cigar[f_cigarn + 1 - f_c] == 'S')
 									{
 										f_cigar[f_cigarn - f_c] += m_n_f;
 									}
@@ -12982,14 +13661,14 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 									sn = sprintf(cigar_p2 + bit_char_i + 1, "%uM", m_n_b);
 									snt = bit_char_i + 1 + sn;
 								}
-								else if(cigar_p2[snt - 1] == 'H')
+								else if(cigar_p2[snt - 1] == 'S')
 								{
 									for(bit_char_i = snt - 2, f_i = 0; bit_char_i > -1; bit_char_i--, f_i++)
 									{
 										if((cigar_p2[bit_char_i] > 64) && (cigar_p2[bit_char_i] < 91))	break;
 										m_n_b += (cigar_p2[bit_char_i] - '0') * carry_ten[f_i];
 									}
-									sn = sprintf(cigar_p2 + bit_char_i + 1, "%uH", m_n_b);
+									sn = sprintf(cigar_p2 + bit_char_i + 1, "%uS", m_n_b);
 									snt = bit_char_i + 1 + sn;
 								}
 								else
@@ -13001,11 +13680,15 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 #endif
 
 #ifdef	CIGAR_LEN_ERR
+
+#ifdef FIX_SA
+							sv_s_len = 0;
+#endif
 							cigar_len = 0;
 							s_o_tmp = 0;
 							strncpy(cigar_tmp, cigar_p2, snt);
 							cigar_tmp[snt] = '\0';
-							pch_tmp = strtok_r(cigar_tmp,"DMIH", &saveptr_tmp);
+							pch_tmp = strtok_r(cigar_tmp,"DMIS", &saveptr_tmp);
 
 							while (pch_tmp != NULL)
 							{
@@ -13016,15 +13699,16 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								{
 									cigar_len_tmp = atoi(pch_tmp);
 									cigar_len += cigar_len_tmp;
+#ifdef FIX_SA
+									if(cigar_p2[s_o_tmp - 1] == 'S')
+										sv_s_len += cigar_len_tmp;
+#endif
 								}
-								pch_tmp = strtok_r(NULL, "DMIH", &saveptr_tmp);
+								pch_tmp = strtok_r(NULL, "DMIS", &saveptr_tmp);
 							}
 
 							if(read_length2 != cigar_len)
 							{
-								//printf("end1 single cigar lenth: %s %u\n", cigar_p2, read_length2);
-								//fflush(stdout);
-
 								if(read_length2 < cigar_len)
 								{
 									cigar_len_re = cigar_len_tmp - (cigar_len - read_length2);
@@ -13039,74 +13723,184 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 								}
 							}
 #endif
-							//sprintf(cigar_p2 + snt, "\0");
 						}
 #ifdef	NO_S_OFF
 						s_offset1 = 0;
 #endif
 						sam_pos2 = sam_pos2 + i_n1 - d_n1 + s_offset1;
 						if(sam_pos2 == seqio[seqi].pos2)	continue;
-						sam_pos2s[tid][xa_i_2 + tra_i_n] = (uint32_t )sam_pos2;
-						
-						lv_re2s[tid][xa_i_2 + tra_i_n] = dms2[tid][tra_i];
-						strcpy(cigar_p2s[tid][xa_i_2 + tra_i_n], cigar_p2);
-						tra_i_n++;
-				}
-				
-				seqio[seqi].chr_res_s2 = chr_res_buffer2[seqi];
-				seqio[seqi].xa_n_x2 = tra_i_n;
-				
-				//printf("sv out 7: %u\n", tra_i_n);
-				
-				xa_i_1 += seqio[seqi].xa_n_x1;
-				xa_i_2 += seqio[seqi].xa_n_x2;
-				
-				if(xa_i_1 > 0)
-				{
-					memcpy(xa_d1s_buffer[seqi], xa_d1s[tid], xa_i_1);
-					seqio[seqi].xa_d1s = xa_d1s_buffer[seqi];
+						if(sam_pos2 <= 0)	sam_pos2 = 1;
 
-					memcpy(sam_pos1s_buffer[seqi], sam_pos1s[tid], xa_i_1 << 2);
-					seqio[seqi].sam_pos1s = sam_pos1s_buffer[seqi];
+						if(sv_s_len_p > sv_s_len)
+						{
+							chr_res_buffer2[seqi][tra_i_n] = seqio[seqi].chr_re2;
+							seqio[seqi].chr_re2 = chr_re;
 
-					memcpy(lv_re1s_buffer[seqi], lv_re1s[tid], xa_i_1 << 2);
-					seqio[seqi].lv_re1s = lv_re1s_buffer[seqi];
+							sam_pos2s[tid][xa_i_2 + tra_i_n] = seqio[seqi].pos2;
 
-					for(v_cnt_i = 0; v_cnt_i < xa_i_1; v_cnt_i++)
-					{
-						pos_l = strlen(cigar_p1s[tid][v_cnt_i]) + 1;
-						seqio[seqi].cigar_p1s[v_cnt_i] = (char* )malloc(pos_l);
+							if((sam_pos2 + read_length2 - 1) > (chr_end_n[chr_re] - chr_end_n[chr_re - 1]))
+								sam_pos2 -= read_length2;
 
-						memcpy(seqio[seqi].cigar_p1s[v_cnt_i], cigar_p1s[tid][v_cnt_i], pos_l);
-					}
-				}
-
-				if(xa_i_2 > 0)
-				{
-					//memcpy(chr_res_buffer[seqi], chr_res[tid], xa_i_2 << 2);
-					//seqio[seqi].chr_res = chr_res_buffer[seqi];
-
-					memcpy(xa_d2s_buffer[seqi], xa_d2s[tid], xa_i_2);
-					seqio[seqi].xa_d2s = xa_d2s_buffer[seqi];
-
-					memcpy(sam_pos2s_buffer[seqi], sam_pos2s[tid], xa_i_2 << 2);
-					seqio[seqi].sam_pos2s = sam_pos2s_buffer[seqi];
-
-					memcpy(lv_re2s_buffer[seqi], lv_re2s[tid], xa_i_2 << 2);
-					seqio[seqi].lv_re2s = lv_re2s_buffer[seqi];
-
-					for(v_cnt_i = 0; v_cnt_i < xa_i_2; v_cnt_i++)
-					{
-						pos_l = strlen(cigar_p2s[tid][v_cnt_i]) + 1;
-						seqio[seqi].cigar_p2s[v_cnt_i] = (char* )malloc(pos_l);
-
-						memcpy(seqio[seqi].cigar_p2s[v_cnt_i], cigar_p2s[tid][v_cnt_i], pos_l);
-					}
-				}
-		
-				//printf("sv out 8\n");
-#else					
+							seqio[seqi].pos2 = sam_pos2;
 							
+							lv_re2s[tid][xa_i_2 + tra_i_n] = seqio[seqi].nm2;
+							seqio[seqi].nm2 = dms2[tid][tra_i];
+							
+							if(seqio[seqi].flag2 & 0X10)
+								xa_d2s[tid][xa_i_1 + tra_i_n] = '-';
+							else xa_d2s[tid][xa_i_1 + tra_i_n] = '+';
+
+
+							if(op_rc_tmp == 0)
+							{
+								if(rcs == 1)		//1+ 2-
+								{
+									seqio[seqi].flag1 = 97;
+									seqio[seqi].flag2 = 145;
+									//xa_d2s[tid][xa_i_2 + tra_i_n] = '-';
+									if(sam_pos2 > seqio[seqi].pos1)
+										sam_cross = sam_pos2 + read_length2 - seqio[seqi].pos1;
+									else
+										sam_cross = sam_pos2 - seqio[seqi].pos1 - read_length1 ;
+									
+									seqio[seqi].seq1 = seqio[seqi].read_seq1;
+
+									for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
+										sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
+									sam_seq1[sam_seq_i] = '\0';
+									strrev1(sam_seq1);
+
+									strcpy(read_rev_buffer[seqi], sam_seq1);
+									read_rev_buffer[seqi][read_length2] = '\0';
+									seqio[seqi].seq2 = read_rev_buffer[seqi];
+								}
+								else 				//1+ 2+
+								{
+									seqio[seqi].flag1 = 65;
+									seqio[seqi].flag2 = 129;
+									//xa_d2s[tid][xa_i_2 + tra_i_n] = '+';
+									sam_cross = sam_pos2 - seqio[seqi].pos1;
+
+									seqio[seqi].seq1 = seqio[seqi].read_seq1;
+									seqio[seqi].seq2 = seqio[seqi].read_seq2;
+								}
+							}
+							else
+							{
+								if(rcs == 1)		//1- 2-
+								{
+									seqio[seqi].flag1 = 113;
+									seqio[seqi].flag2 = 177;
+									//xa_d2s[tid][xa_i_2 + tra_i_n] = '-';
+									sam_cross = sam_pos2 - seqio[seqi].pos1;
+
+									for(sam_seq_i = 0; sam_seq_i < read_length1; sam_seq_i++)
+										sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq1[sam_seq_i]] ^ 0X3];
+									sam_seq1[sam_seq_i] = '\0';
+									strrev1(sam_seq1);
+
+									strcpy(read_rev_buffer[seqi], sam_seq1);
+									read_rev_buffer[seqi][read_length1] = '\0';
+									seqio[seqi].seq1 = read_rev_buffer[seqi];
+
+									for(sam_seq_i = 0; sam_seq_i < read_length2; sam_seq_i++)
+										sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq2[sam_seq_i]] ^ 0X3];
+									sam_seq1[sam_seq_i] = '\0';
+									strrev1(sam_seq1);
+
+									strcpy(read_rev_buffer_1[seqi], sam_seq1);
+									read_rev_buffer_1[seqi][read_length2] = '\0';
+									seqio[seqi].seq2 = read_rev_buffer_1[seqi];
+								}
+								else 				//1- 2+
+								{
+									seqio[seqi].flag1 = 81;
+									seqio[seqi].flag2 = 161;
+									//xa_d2s[tid][xa_i_2 + tra_i_n] = '+';
+									if(seqio[seqi].pos1 > sam_pos2)
+										sam_cross = sam_pos2 - read_length1 - seqio[seqi].pos1;
+									else
+										sam_cross = sam_pos2 + read_length2 - seqio[seqi].pos1;
+									
+									for(sam_seq_i = 0; sam_seq_i < read_length1; sam_seq_i++)
+										sam_seq1[sam_seq_i] = Dna5Tochar[charToDna5n[seqio[seqi].read_seq1[sam_seq_i]] ^ 0X3];
+									sam_seq1[sam_seq_i] = '\0';
+									strrev1(sam_seq1);
+
+									strcpy(read_rev_buffer[seqi], sam_seq1);
+									read_rev_buffer[seqi][read_length1] = '\0';
+									seqio[seqi].seq1 = read_rev_buffer[seqi];
+
+									seqio[seqi].seq2 = seqio[seqi].read_seq2;
+								}
+							}
+							seqio[seqi].cross = sam_cross;
+
+							strcpy(cigar_p2s[tid][xa_i_2 + tra_i_n], pr_cigar2_buffer[seqi]);
+							strcpy(pr_cigar2_buffer[seqi], cigar_p2);
+						}
+						else
+						{
+							sam_pos2s[tid][xa_i_2 + tra_i_n] = (uint32_t )sam_pos2;
+
+							lv_re2s[tid][xa_i_2 + tra_i_n] = dms2[tid][tra_i];
+							strcpy(cigar_p2s[tid][xa_i_2 + tra_i_n], cigar_p2);
+
+						}
+						tra_i_n++;
+					}
+
+					seqio[seqi].chr_res_s2 = chr_res_buffer2[seqi];
+					seqio[seqi].xa_n_x2 = tra_i_n;
+
+					//xa_i_2 += seqio[seqi].xa_n_x2;
+					xa_i_2 += tra_i_n;
+				}
+
+				if(xa_i_1 > 0)
+				{
+					memcpy(xa_d1s_buffer[seqi], xa_d1s[tid], xa_i_1);
+					seqio[seqi].xa_d1s = xa_d1s_buffer[seqi];
+
+					memcpy(sam_pos1s_buffer[seqi], sam_pos1s[tid], xa_i_1 << 2);
+					seqio[seqi].sam_pos1s = sam_pos1s_buffer[seqi];
+
+					memcpy(lv_re1s_buffer[seqi], lv_re1s[tid], xa_i_1 << 2);
+					seqio[seqi].lv_re1s = lv_re1s_buffer[seqi];
+
+					for(v_cnt_i = 0; v_cnt_i < xa_i_1; v_cnt_i++)
+					{
+						pos_l = strlen(cigar_p1s[tid][v_cnt_i]) + 1;
+						seqio[seqi].cigar_p1s[v_cnt_i] = (char* )malloc(pos_l);
+
+						memcpy(seqio[seqi].cigar_p1s[v_cnt_i], cigar_p1s[tid][v_cnt_i], pos_l);
+					}
+				}
+
+				if(xa_i_2 > 0)
+				{
+					//memcpy(chr_res_buffer[seqi], chr_res[tid], xa_i_2 << 2);
+					//seqio[seqi].chr_res = chr_res_buffer[seqi];
+
+					memcpy(xa_d2s_buffer[seqi], xa_d2s[tid], xa_i_2);
+					seqio[seqi].xa_d2s = xa_d2s_buffer[seqi];
+
+					memcpy(sam_pos2s_buffer[seqi], sam_pos2s[tid], xa_i_2 << 2);
+					seqio[seqi].sam_pos2s = sam_pos2s_buffer[seqi];
+
+					memcpy(lv_re2s_buffer[seqi], lv_re2s[tid], xa_i_2 << 2);
+					seqio[seqi].lv_re2s = lv_re2s_buffer[seqi];
+
+					for(v_cnt_i = 0; v_cnt_i < xa_i_2; v_cnt_i++)
+					{
+						pos_l = strlen(cigar_p2s[tid][v_cnt_i]) + 1;
+						seqio[seqi].cigar_p2s[v_cnt_i] = (char* )malloc(pos_l);
+
+						memcpy(seqio[seqi].cigar_p2s[v_cnt_i], cigar_p2s[tid][v_cnt_i], pos_l);
+					}
+				}
+#else
+
 				if(xa_i_1 > 0)
 				{
 					memcpy(xa_d1s_buffer[seqi], xa_d1s[tid], xa_i_1);
@@ -13151,11 +13945,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				}
 #endif
 
-
-
-#ifdef	POST_DEBUG
-				printf("anchor out end\n");
-#endif
 			}
 			else
 			{
@@ -13185,9 +13974,6 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				seqio[seqi].seq1 = seqio[seqi].read_seq1;
 				seqio[seqi].seq2 = seqio[seqi].read_seq2;
 			}
-			
-			//printf("anchor out finish\n");
-			
 		}
 #else
 		seqio[seqi].v_cnt = 0;
@@ -14558,7 +15344,7 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 #endif
 
 	uint64_t chr_re_tmp = 0;
-	
+
 	v_cnt = cnt->v_cnt;
 	vs_cnt = cnt->vs_cnt;
 
@@ -15341,9 +16127,6 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 
 		if(read_length1 != cigar_len)
 		{
-			//end1 cigar lenth: 25M1D126M 25 152 151 after 25M1D125M
-			//printf("end1 cigar lenth: %s %s %u %u\n", cigar_p1, cigar_tmp, cigar_len, read_length1);
-
 			if(read_length1 < cigar_len)
 			{
 				cigar_len_re = cigar_len_tmp - (cigar_len - read_length1);
@@ -15356,9 +16139,6 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 				cigar_len_re = cigar_len_tmp + (read_length1 - cigar_len);
 				sprintf(cigar_p1 + snt - sn, "%u%c", cigar_len_re, cigar_p1[snt - 1]);
 			}
-
-			//printf("after %s\n", cigar_p1);
-			//fflush(stdout);
 		}
 #endif
 	}
@@ -15990,8 +16770,6 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 
 		if(read_length2 != cigar_len)
 		{
-			//printf("end2 cigar lenth: %s %s %u %u\n", cigar_p2, cigar_tmp, cigar_len, read_length2);
-
 			if(read_length2 < cigar_len)
 			{
 				cigar_len_re = cigar_len_tmp - (cigar_len - read_length2);
@@ -16004,9 +16782,6 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 				cigar_len_re = cigar_len_tmp + (read_length2 - cigar_len);
 				sprintf(cigar_p2 + snt - sn, "%u%c", cigar_len_re, cigar_p2[snt - 1]);
 			}
-
-			//printf("after %s\n", cigar_p2);
-			//fflush(stdout);
 		}
 #endif
 
@@ -16018,27 +16793,31 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 	}
 #endif
 
-			
+
 	sam_pos1_pr = sam_pos1 + i_n1 - d_n1 + s_offset1;
 	sam_pos2_pr = sam_pos2 + i_n2 - d_n2 + s_offset2;
-		
+
 	chr_re_tmp = chr_end_n[chr_re] - chr_end_n[chr_re - 1];
-	
+
 	if(sam_pos1_pr <= 0)
 	{
 		sam_pos1_pr = 1;
-	}else{
+	}
+	else
+	{
 		if((sam_pos1_pr + read_length1 - 1) > chr_re_tmp)
 			sam_pos1_pr -= read_length1;
-	}		
+	}
 	if(sam_pos2_pr <= 0)
 	{
 		sam_pos2_pr = 1;
-	}else{
+	}
+	else
+	{
 		if((sam_pos2_pr + read_length1 - 1) > chr_re_tmp)
 			sam_pos2_pr -= read_length1;
-	}		
-		
+	}
+
 #ifdef	OUTPUT_ARR
 	seqio[seqi].flag1 = sam_flag1;
 	seqio[seqi].flag2 = sam_flag2;
@@ -16782,9 +17561,6 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 
 			if(read_length1 != cigar_len)
 			{
-				//printf("end1 xa cigar lenth: %s %u\n", cigar_p1, read_length1);
-				//fflush(stdout);
-
 				if(read_length1 < cigar_len)
 				{
 					cigar_len_re = cigar_len_tmp - (cigar_len - read_length1);
@@ -17367,9 +18143,6 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 
 			if(read_length2 != cigar_len)
 			{
-				//printf("end2 xa cigar lenth: %s %u\n", cigar_p2, read_length2);
-				//fflush(stdout);
-
 				if(read_length2 < cigar_len)
 				{
 					cigar_len_re = cigar_len_tmp - (cigar_len - read_length2);
@@ -18176,9 +18949,6 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 
 			if(read_length1 != cigar_len)
 			{
-				//printf("end1 xa cigar lenth: %s %u\n", cigar_p1, read_length1);
-				//fflush(stdout);
-
 				if(read_length1 < cigar_len)
 				{
 					cigar_len_re = cigar_len_tmp - (cigar_len - read_length1);
@@ -18829,9 +19599,6 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 
 			if(read_length2 != cigar_len)
 			{
-				//printf("end2 xa cigar lenth: %s %u %u \n", cigar_p2, cigar_len, read_length2);
-				//fflush(stdout);
-
 				if(read_length2 < cigar_len)
 				{
 					cigar_len_re = cigar_len_tmp - (cigar_len - read_length2);
@@ -18962,12 +19729,12 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 	//seqio[seqi].xa_n = xa_i;
 	seqio[seqi].xa_n_p1 = xa_i;
 	seqio[seqi].xa_n_p2 = xa_i;
-	
+
 #ifdef	FIX_SV
 	seqio[seqi].xa_n_x1 = 0;
 	seqio[seqi].xa_n_x2 = 0;
 #endif
-	
+
 	if(xa_i > 0)
 	{
 		memcpy(chr_res_buffer[seqi], chr_res[tid], xa_i << 2);
@@ -20335,7 +21102,7 @@ void seed_repetitive_single_end(uint64_t* read_bit, uint8_t tid, uint16_t read_l
 
 int seed_ali_single_end(int argc, char *argv[])
 {
-	printf("single end reads mapping\n\n");
+	fprintf(stderr, "single end reads mapping\n\n");
 
 	double t = 0.00;
 	clock_t start = 0, end = 0;
@@ -20369,30 +21136,34 @@ int seed_ali_single_end(int argc, char *argv[])
 
 	seed_l_max = seed_step * cir_fix_n;
 
-	printf("%lf seconds is used for loading index\n", t);
+	fprintf(stderr, "%lf seconds is used for loading index\n", t);
 
 	fp1 = gzopen(read_fastq1, "r");
 	seq1 = kseq_init(fp1);
 
 	if(fp1 == NULL)
 	{
-		printf("wrong input file route or name: %s\n", read_fastq1);
+		fprintf(stderr, "wrong input file route or name: %s\n", read_fastq1);
 		exit(1);
 	}
 
-	fp_sam = fopen(sam_result, "w");
-	if(fp_sam == NULL)
+	if(flag_std == 0)
 	{
-		printf("wrong output file route or name: %s\n", sam_result);
-		exit(1);
+		fp_sam = fopen(sam_result, "w");
+		if(fp_sam == NULL)
+		{
+			fprintf(stderr, "wrong output file route or name: %s\n", sam_result);
+			exit(1);
+		}
 	}
+	
 
 	k_r = k_t - k;
 	re_b = 32 - k_t;
 	re_bt = (re_b << 1);
 	re_2bt = 64 - k_t;
 
-	printf("number of threads running: %u\nmax read length: %u\nseed positions filter: %u\nthe filter number of seed positions: %u\nthe minimum seed interval: %u\nthe number of seed circulation: %u\n", thread_n, readlen_max, pos_n_max, seed_filter_pos_num_singlen, seed_step, cir_fix_n);
+	fprintf(stderr, "number of threads running: %u\nmax read length: %u\nseed positions filter: %u\nthe filter number of seed positions: %u\nthe minimum seed interval: %u\nthe number of seed circulation: %u\n", thread_n, readlen_max, pos_n_max, seed_filter_pos_num_singlen, seed_step, cir_fix_n);
 
 	pair_ran_intvp = seed_l_max;
 
@@ -20456,7 +21227,7 @@ int seed_ali_single_end(int argc, char *argv[])
 	for(r_i = 0; r_i < thread_n; r_i++)
 		pos_add[r_i] = (uint8_t* )calloc(pos_n_max, 1);
 
-	printf("Load seed reduction allocation\n");
+	fprintf(stderr, "Load seed reduction allocation\n");
 
 #ifdef UNPIPATH_OFF_K20
 	op_vector_pos1 = (uint64_t** )calloc(thread_n, sizeof(uint64_t* ));
@@ -20510,7 +21281,7 @@ int seed_ali_single_end(int argc, char *argv[])
 				exit(1);
 	}
 
-	printf("Load alignment allocation\n");
+	fprintf(stderr, "Load alignment allocation\n");
 
 #ifdef ALT_ALL
 	chr_res = (int** )calloc(thread_n, sizeof(int* ));
@@ -20541,7 +21312,7 @@ int seed_ali_single_end(int argc, char *argv[])
 
 #endif
 
-	printf("Load output allocation\n");
+	fprintf(stderr, "Load output allocation\n");
 
 	op_rc = (uint8_t** )calloc(thread_n, sizeof(uint8_t* ));
 	for(r_i = 0; r_i < thread_n; r_i++)
@@ -20632,7 +21403,7 @@ int seed_ali_single_end(int argc, char *argv[])
 	InitiateLVCompute(L, thread_n);
 
 	//for pthread read input
-	printf("Load seq input memory\n");
+	fprintf(stderr, "Load seq input memory\n");
 
 	seqio = (seq_io* )calloc(read_in, sizeof(seq_io));
 
@@ -20745,9 +21516,9 @@ int seed_ali_single_end(int argc, char *argv[])
 
 	t = (double)(end - start) / CLOCKS_PER_SEC;
 
-	printf("%lf seconds is used for allocating memory\n", t);
+	fprintf(stderr, "%lf seconds is used for allocating memory\n", t);
 
-	printf("begin reading fastq single-end reads and doing seed reduction and alignment\n");
+	fprintf(stderr, "begin reading fastq single-end reads and doing seed reduction and alignment\n");
 
 #ifdef	R_W_LOCK
 	pthread_rwlock_init(&rwlock, NULL);
@@ -20881,7 +21652,7 @@ int seed_ali_single_end(int argc, char *argv[])
 
 	dtime = omp_get_wtime() - dtime;
 
-	printf("%lf seconds is used \n", dtime);
+	fprintf(stderr, "%lf seconds is used \n", dtime);
 	fflush(stdout);
 
 #ifdef	R_W_LOCK
@@ -22762,9 +23533,6 @@ int seed_ali_core_single_end(uint32_t seqn, uint8_t tid)
 
 				if(read_length != cigar_len)
 				{
-					//printf("end cigar lenth: %s %u\n", cigar_p1, read_length);
-					//fflush(stdout);
-
 					if(read_length < cigar_len)
 					{
 						cigar_len_re = cigar_len_tmp - (cigar_len - read_length);

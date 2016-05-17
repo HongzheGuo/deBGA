@@ -170,6 +170,7 @@ extern float max_pair_score_r;
 extern float last_circle_rate;
 extern uint8_t local_ksw;
 extern uint8_t mgn_flag;
+extern uint8_t flag_std;
 
 extern float max_single_score_r;
 extern uint16_t pr_single_outputn;

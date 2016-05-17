@@ -64,6 +64,8 @@ deBGA aln
 
 --local-gap-extension,  INT the penalty for gap extension in the local alignment.This option will take effect only if --local option is set[1].     
 
+--stdout,					(default: not set) output alignments by stdout. This option will let deBGA directly output alignments by stdout instead of user defined file.
+
 -u,                     INT the upper limit of insert size. For a pair-end read, deBGA pairs the alignments of the two ends according to the upper (-u option) and lower (-f option) limits of the insert size.
 							deBGA will consider it as a suitable pair-end alignment only if the inferred insert size is within the range [-f, -u][1000].
 

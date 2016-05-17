@@ -8,8 +8,12 @@
 
 #include "load_input.h"
 
-//#define	FIX_SV
+//#define RD_FILED
 
+#define	FIX_SV
+#define FIX_SA
+
+#define	PAR_OUPUT
 //define SAMTOOLS_BUG
 //#define PICARD_BUG
 //#define POST_DEBUG
@@ -459,6 +463,9 @@ typedef struct SEQIOIN
 
 }seq_io;
 
+#ifdef	FIX_SA
+char** read_rev_buffer_1 = NULL;
+#endif
 
 seq_io* seqio = NULL;
 char** qual1_buffer = NULL;

@@ -528,9 +528,7 @@ void load_reffile_kmer_fa()
 #ifdef	CHR_NAME_SPLIT
 			strcpy(tmp_chr_name, one_line + 1);
 			pch = strtok_r(tmp_chr_name, " ", &saveptr);
-			
-			//printf("chr_name: %s\n", pch);
-			
+
 			strcpy(chr_names[chr_name_n++], pch);
 #else
 			strcpy(chr_names[chr_name_n++], one_line + 1);
@@ -586,12 +584,7 @@ void load_reffile_kmer_fa()
                     }
 
                     seq_exact(kmer, kmer_s, kmer_i, f, strlen(kmer));
-					
-#ifdef	DEBUG_INPUT	
-					if(strcmp(kmer_s, "AAAAAACTTGAAAGATAA") == 0)
-						printf("\n\n1. %s:\nline: %s\n%s\n\n\n", tmp_chr_name, one_line, kmer);
-					//printf("%s\n", kmer);
-#endif					
+			
                     //binary file
                     //must assign in this order
                     kmer_bit32a(kmer_s, k_t - f, kmer_i, write_buff, 3)
@@ -737,11 +730,6 @@ void load_reffile_kmer_fa()
 
                 seq_exact(kmer, kmer_s, kmer_i, f, strlen(kmer));
 
-#ifdef	DEBUG_INPUT	
-				if(strcmp(kmer_s, "AAAAAACTTGAAAGATAA") == 0)
-					printf("\n\n1. %s:\nline: %s\n%s\n\n\n", tmp_chr_name, one_line, kmer);
-				//printf("%s\n", kmer);
-#endif
                 //binary file
                 //must assign in this order
                 kmer_bit32a(kmer_s, k_t - f, kmer_i, write_buff, 3)
@@ -821,12 +809,7 @@ void load_reffile_kmer_fa()
             }
 
             seq_exact(kmer, kmer_s, kmer_i, f, strlen(kmer));
-			
-#ifdef	DEBUG_INPUT	
-			if(strcmp(kmer_s, "AAAAAACTTGAAAGATAA") == 0)
-				printf("\n\n1. %s:\nline: %s\n%s\n\n\n", tmp_chr_name, one_line, kmer);
-			//printf("%s\n", kmer);
-#endif
+
 
             //binary file
             //must assign in this order
@@ -1463,12 +1446,8 @@ uint32_t file_kmer_qsort()
 
     for(t_hash_i = 0; t_hash_i < hash_n; t_hash_i++)//268435456
     {
-		//printf("\n%u %"PRId64" %"PRId64" %"PRId64"\n", t_hash_i, hash_array[t_hash_i], hash_array[t_hash_i + 1], hash_array[t_hash_i + 1] - hash_array[t_hash_i]);
-		
         for(t_kmer_i = hash_array[t_hash_i]; t_kmer_i < hash_array[t_hash_i + 1]; t_kmer_i++)
         {
-			//printf("%u ", kmer_array[t_kmer_i]);
-			
             //get the whole kmer
             //kmer_array[t_kmer_i]: get last kmer
             kmer_ws = (((uint64_t )t_hash_i) << ((k_t - k) << 1)) + kmer_array[t_kmer_i];
@@ -1506,7 +1485,6 @@ uint32_t file_kmer_qsort()
                 {
                     if(strlen(ws) != k_t)
 					{
-						//printf("k_t not eq 3 5, %u %u\n", strlen(ws), k_t);
 						printf("kmer length error\n");
 						fflush(stdout);
 						exit(1);
@@ -1529,7 +1507,6 @@ uint32_t file_kmer_qsort()
                 {
                     if(strlen(ws) != k_t)
 					{
-						//printf("k_t not eq 4 6, %u %u\n", strlen(ws), k_t);
 						printf("kmer length error\n");
 						fflush(stdout);
 						exit(1);
@@ -1569,7 +1546,6 @@ uint32_t file_kmer_qsort()
                 {
                     if(strlen(ws) != k_t)
 					{
-						//printf("k_t not eq 8, %u %u\n", strlen(ws), k_t);
 						printf("kmer length error\n");
 						fflush(stdout);
 						exit(1);
@@ -2194,27 +2170,18 @@ uint32_t file_kmer_qsort()
 			first_pos = (uint32_t* )calloc(first_cnt, 4);
 #endif
           
-#ifdef	DEBUG_COMBINE
-			//printf("%u. line_l: %u\n\n", line_cntu, line_l);
-			//printf("poses:\n");
-#endif
+
             first_i = 0;
             for(uni_pos_i = kmer_point[binary_r]; uni_pos_i < kmer_point[binary_r + 1]; uni_pos_i++)
             {
                 first[first_i] = pos_array[uni_pos_i];
 				
-#ifdef	DEBUG_COMBINE
-				//printf("%"PRId64"\n", first[first_i]);
-#endif
 		
                 first_pos[first_i] = pos_array[uni_pos_i];
 
                 first_i++;
             }
-#ifdef	DEBUG_COMBINE
-			//printf("\n");
-#endif
-			
+	
             uni_de = 0;
 
             for(uni_in_i = 1; uni_in_i < line_l - k_t + 1; uni_in_i++)
@@ -2242,22 +2209,14 @@ uint32_t file_kmer_qsort()
 				{
 					printf("kmer search error\n");
 #ifdef	DEBUG_64BIT
-					// 200869072 37040 20 4294967272
 					printf("error -1 binsearch_offset_index, not found %u %u %"PRId64" %"PRId64"\n", kmer_fs, kmer_ss, hash_array[kmer_fs + 1], hash_array[kmer_fs]);
 #endif					
 					fflush(stdout);
 					exit(1);
-					//fprintf(unipath_debug, "error -1\n");
 				}
 
                 if(!r_cnt)
-                {
-					/*
-					printf("error unipath point\n");
-					fflush(stdout);
-					exit(1);
-					*/
-					
+                {		
                     if(!uni_de)
                     {
                         for(uni_pos_i = 0; uni_pos_i < first_cnt; uni_pos_i++)
@@ -2398,24 +2357,7 @@ uint32_t file_kmer_qsort()
 	fflush(fp_num);
 	
 	fclose(fp_num);
-	
-	
-    //free(file_line_cnt);
-    //fclose(file_s);
 
-    //create pos-unipath table
-    //build_pos_unipath();
-	
-	//printf("finish build position unipath\n");
-	//fflush(stdout);
-	
-    //write into statistical data
-	/*
-    fwrite(&w_offset, 4, 1, fp_sta);
-    fflush(fp_sta);
-	
-	fclose(fp_sta);
-	*/
 		
 #ifdef	HANDLE_DIR
 	//delete the div tmp folder
