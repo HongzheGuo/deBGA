@@ -9355,7 +9355,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				else
 				{
 					if((sam_pos1 + read_length1 - 1) > (chr_end_n[chr_re1] - chr_end_n[chr_re1 - 1]))
-						sam_pos1 -= read_length1;
+						sam_pos1 = chr_end_n[chr_re1] - chr_end_n[chr_re1 - 1] - 1 - read_length1;
 				}
 				if(sam_pos2 <= 0)
 				{
@@ -9364,7 +9364,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 				else
 				{
 					if((sam_pos2 + read_length2 - 1) > (chr_end_n[chr_re2] - chr_end_n[chr_re2 - 1]))
-						sam_pos2 -= read_length2;
+						sam_pos2 = chr_end_n[chr_re2] - chr_end_n[chr_re2 - 1] - 1 - read_length2;
 				}
 
 				seqio[seqi].pos1 = sam_pos1;
@@ -13146,7 +13146,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							sam_pos1s[tid][xa_i_1 + tra_i_n] = seqio[seqi].pos1;
 
 							if((sam_pos2 + read_length1 - 1) > (chr_end_n[chr_re] - chr_end_n[chr_re - 1]))
-								sam_pos2 -= read_length1;
+								sam_pos2 = chr_end_n[chr_re] - chr_end_n[chr_re - 1] - 1 - read_length1;
 
 							seqio[seqi].pos1 = sam_pos2;
 							
@@ -13739,7 +13739,7 @@ int seed_ali_core(uint32_t seqn, uint8_t tid)
 							sam_pos2s[tid][xa_i_2 + tra_i_n] = seqio[seqi].pos2;
 
 							if((sam_pos2 + read_length2 - 1) > (chr_end_n[chr_re] - chr_end_n[chr_re - 1]))
-								sam_pos2 -= read_length2;
+								sam_pos2 = chr_end_n[chr_re] - chr_end_n[chr_re - 1] - 1 - read_length2;
 
 							seqio[seqi].pos2 = sam_pos2;
 							
@@ -16805,8 +16805,10 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 	}
 	else
 	{
+		
 		if((sam_pos1_pr + read_length1 - 1) > chr_re_tmp)
-			sam_pos1_pr -= read_length1;
+			sam_pos1_pr = chr_re_tmp - 1 - read_length1;
+		
 	}
 	if(sam_pos2_pr <= 0)
 	{
@@ -16814,8 +16816,8 @@ void pair_sam_output(uint8_t tid, uint16_t read_length1, uint16_t read_length2, 
 	}
 	else
 	{
-		if((sam_pos2_pr + read_length1 - 1) > chr_re_tmp)
-			sam_pos2_pr -= read_length1;
+		if((sam_pos2_pr + read_length2 - 1) > chr_re_tmp)
+			sam_pos2_pr = chr_re_tmp - 1 - read_length2;
 	}
 
 #ifdef	OUTPUT_ARR
