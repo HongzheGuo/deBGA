@@ -10,58 +10,39 @@ deBGA is mainly designed by Bo Liu and developed by Hongzhe Guo in Center for Bi
 ###Memory requirement
 The memory usage of deBGA can fit the configurations of most modern servers and workstations. Its peak memory footprint depends on the length of reference genome, i.e., 69.55 Gigabytes and 5.20 Gigabytes respectively for the real H. Sapiens and E. Coli genomes, on a server with Intel Xeon CPU at 2.00 GHz, 1 Terabytes RAM running Linux Ubuntu 14.04.
 The wall time and memory footprint of the index construction for the references (the k-mer size of the index is 22) is as follows. The time is in seconds, and the memory footprints are in Gigabytes.
+```
+No.	Reference		Time	Memory
 
-No.	Reference	Time	Memory
 1	E. coli	K-12 MG1655 substrain	21	2.02
-
 2	10 E. coli strains	116	3.02
-
 3	20 E. coli strains	200	3.02
-
 4	40E. coli strains	280	4.03
-
 5	62E. coli strains	729	5.04
-
 6	A. thaliana reference genome (TAIR10)	972	7.05
-
 7	19 A. thaliana strains	4993	11.09
-
 8	RefSeq bacteria genomes	69912	153.30
-
 9	xenograft model (hg19+MM10)	42851	130.03
-
 10	human reference genome (hg19)	15786	69.55
-
+```
 
 The memory footprint of deBGA when aligning the reads from the listed datasets (the alignment is conducted with the default setting of deBGA) is as follows. The memory footprint are in Gigabytes.
-
+```
 No.	Dataset	Memory
+
 1	E. coli Sim-62	9.07
-
 2	ERR008613	9.07
-
 3	SRR522163	9.07
-
 4	SRR530851	9.07
-
 5	A. thaliana Sim-19	12.1
-
 6	Meta Sim	80.64
-
 7	Xenograft Sim	60.48
-
 8	Meta Pseudo-real	80.64
-
 9	H. sapiens Sim-100	40.32
-
 10	H. sapiens Sim-250	40.32
-
 11	ERR174324	40.32
-
 12	Hiseq X Ten: NA12878_L3	40.32
-
 13	ERR161544	40.32
-
+```
 
 ###Installation
 Current version of deBGA needs to be run on Linux operating system.  
