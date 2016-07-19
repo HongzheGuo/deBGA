@@ -10,20 +10,20 @@ deBGA is mainly designed by Bo Liu and developed by Hongzhe Guo in Center for Bi
 ###Memory requirement
 The memory usage of deBGA can fit the configurations of most modern servers and workstations. Its peak memory footprint depends on the length of reference genome, i.e., 40.32 Gigabytes and 9.07 Gigabytes respectively for the real H. Sapiens and E. Coli genomes, on a server with Intel Xeon CPU at 2.00 GHz, 1 Terabytes RAM running Linux Ubuntu 14.04.
 
-The wall time and memory footprint of the index construction for the references (the k-mer size of the index is 22) is as follows. The time is in seconds, and the memory footprints are in Gigabytes.
+The wall time and memory footprint of the index construction for the references (the k-mer size of the index is 22) is as follows. The time is in seconds, and the memory footprints are in Gigabytes, ref.file size is in Gigabytes.
 ```
-No.	Reference								Time	Memory
+No.	Reference								Time	Memory	ref.file size
 
-1	E. coli	K-12 MG1655 substrain			21		2.02
-2	10 E. coli strains						116		3.02
-3	20 E. coli strains						200		3.02
-4	40E. coli strains						280		4.03
-5	62E. coli strains						729		5.04
-6	A. thaliana reference genome (TAIR10)	972		7.05
-7	19 A. thaliana strains					4993	11.09
-8	RefSeq bacteria genomes					69912	153.30
-9	xenograft model (hg19+MM10)				42851	130.03
-10	human reference genome (hg19)			15786	69.55
+1	E. coli	K-12 MG1655 substrain			21		2.02	0.004
+2	10 E. coli strains						116		3.02	0.05
+3	20 E. coli strains						200		3.02	0.09
+4	40E. coli strains						280		4.03	0.19
+5	62E. coli strains						729		5.04	0.29
+6	A. thaliana reference genome (TAIR10)	972		7.05	0.11
+7	19 A. thaliana strains					4993	11.09	2.12
+8	RefSeq bacteria genomes					69912	153.30	8.56
+9	xenograft model (hg19+MM10)				42851	130.03	5.53
+10	human reference genome (hg19)			15786	69.55	2.94
 ```
 
 The memory footprint of deBGA when aligning the reads from the listed datasets (the alignment is conducted with the default setting of deBGA) is as follows. The memory footprint are in Gigabytes.
@@ -133,8 +133,8 @@ We simulated a series of datasets from various genomes, i.e., human genome build
 
 
 ###Reference
-deBGA: Read Alignment with de Bruijn Graph-based Seed and Extension. Manuscript in preparation.
+deBGA: read alignment with de Bruijn Graph-based seed and extension.
 
 ###Contact
-For advising, bug reporting and requiring help, please contact ydwang@hit.edu.cn
+For advising, bug reporting and requiring help, please contact ydwang@hit.edu.cn; hzguo@hit.edu.cn
 
