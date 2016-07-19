@@ -10,7 +10,7 @@ deBGA is mainly designed by Bo Liu and developed by Hongzhe Guo in Center for Bi
 ###Memory requirement
 The memory usage of deBGA can fit the configurations of most modern servers and workstations. Its peak memory footprint depends on the length of reference genome, i.e., 40.32 Gigabytes and 9.07 Gigabytes respectively for the real H. Sapiens and E. Coli genomes, on a server with Intel Xeon CPU at 2.00 GHz, 1 Terabytes RAM running Linux Ubuntu 14.04.
 
-The wall time and memory footprint of the index construction for the references (the k-mer size of the index is 22) is as follows. The time is in seconds, and the memory footprints are in Gigabytes, ref.file size is in Gigabytes.
+The wall time and memory footprint of the index construction for the references (the k-mer size of the index is 22) is as follows. The time is in seconds, the memory footprints are in Gigabytes, and ref.file size is in Gigabytes.
 ```
 No.	Reference								Time	Memory	ref.file size
 
