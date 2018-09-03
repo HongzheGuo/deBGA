@@ -1,4 +1,5 @@
-###Introduction
+### Introduction
+
 deBGA is a seed-and-extension-based read alignment tool. It is suitable for aligning various kinds of high-throughput sequencing reads to multiple similar reference genomes.
 
 deBGA indexes the genome through de Bruijn graph framework, which captures the genomic substrings implied by the unipaths and indexes them with a hash table-based index. With the index, deBGA adopts a seed-and-extension strategy. In seeding phase, a series of seeds from the reads are matched to the reference genome inferring a set of putative read positions (PRPs) from the matched positions. In the extension phase, the reads are aligned with the local sequences around the PRPs to compose full read alignments.
@@ -7,7 +8,8 @@ deBGA has outstanding throughput on aligning reads from various prokaryote and e
 
 deBGA is mainly designed by Bo Liu and developed by Hongzhe Guo in Center for Bioinformatics, Harbin Institute of Technology, China.
 
-###Memory requirement
+### Memory requirement
+
 The memory usage of deBGA can fit the configurations of most modern servers and workstations. Its peak memory footprint depends on the length of reference genome, i.e., 40.32 Gigabytes and 9.07 Gigabytes respectively for the real H. Sapiens and E. Coli genomes, on a server with Intel Xeon CPU at 2.00 GHz, 1 Terabytes RAM running Linux Ubuntu 14.04.
 
 The wall time and memory footprint of the index construction for the references (the k-mer size of the index is 22) is as follows. The time is in seconds, the memory footprints are in Gigabytes, and ref.file size is in Gigabytes.
@@ -45,12 +47,14 @@ No.	Dataset					Memory
 13	ERR161544				40.32
 ```
 
-###Installation
+### Installation
+
 Current version of deBGA needs to be run on Linux operating system.  
 The source code is written in C, and can be directly download from: https://github.com/HongzheGuo/deBGA  
 The makefile is attached. Use the make command for generating the executable file.  
 
-###Synopsis
+### Synopsis
+
 deBGA index [options] reference.fasta \<index_route\>  
 Index reference in RdBG-Index format  
 
@@ -122,19 +126,23 @@ deBGA aln
 -p,                     INT the number of threads. The current version of deBGA supports upto 32 threads in read alignment[1].    
 ```
 
-###Quick start
+### Quick start
+
 Genome indexing:
 deBGA index Reference Index_Dir
+
 Read alignment:
 deBGA aln Index_Dir Fastq_File Sam_file
 
-###Simulation benchmarking
+### Simulation benchmarking
+
 We simulated a series of datasets from various genomes, i.e., human genome build GRCh37/hg19 and the reference sequences of the 62 E. Coli strains, through Mason Simulator (version0.1.2). For human genome, five read lengths from 100 bp to 250 bp were used and the mean and standard deviation of the insert size are respectively 500 bp and 25 bp for all the datasets. For the E.coli strains, 100 bp Illumina-like pair-end reads were simulated for evaluation. These datasets helped us to evaluate the performance of deBGA. The datasets have been uploaded to Google Drive, and can be downloaded through the following link:
 
+### Reference
 
-###Reference
 deBGA: read alignment with de Bruijn Graph-based seed and extension.
 
-###Contact
+### Contact
+
 For advising, bug reporting and requiring help, please contact ydwang@hit.edu.cn; hzguo@hit.edu.cn
 
